@@ -1,1 +1,98 @@
+from flask import Flask, request, jsonify
+import mysql.connector
+from datetime import datetime
 
+app = Flask(__name__)
+
+# Conexão com o Banco de Dados
+def conectar_banco():
+    return mysql.connector.connect(
+        host="localhost",
+        user="seu_usuario",
+        password="sua_senha",
+        database="espaco_comemore"
+    )
+
+# Rota para receber e salvar os dados do contrato
+@app.route('/salvar-contrato', methods=['POST'])
+def salvar_contrato():
+    try:
+        # Recebe dados do formulário
+        dados = request.json
+
+        # 🔹 Cálculo automático de valores
+        data_evento = datetime.strptime(dados['data_evento'], '%d/%m/%Y')
+        dia_semana = data_evento.weekday() # 0=segunda / 5=sábado / 6=domingo
+
+        # Valor base da locação
+        if dia_semana in range(0,4): valor_base = 400.00
+        elif dia_semana in (4,6): valor_base = 450.00
+        else: valor_base = 550.00
+
+        # Valor da entrada
+        if dia_semana in range(0,4): valor_entrada = 150.00
+        elif dia_semana in (4,6): valor_entrada = 200.00
+        else: valor_entrada = 250.00
+
+        # Adicionais
+        if dados['qtd_mesas'] == 20: valor_base += 60.00
+        if dados['qtd_mesas'] == 25: valor_base += 120.00
+        if dados['uso_som'] == 'sim_microfone': valor_base += 30.00
+        if dados['pula_pula']: valor_base += 110.00
+        if dados['piscina_bolinha']: valor_base += 110.00
+
+        # 🔹 Insere no banco
+        conexao = conectar_banco()
+        cursor = conexao.cursor()
+
+        sql = """
+        INSERT INTO contratos (
+            nome_contratado, cpf_contratado, endereco_contratado, telefone_contratado,
+            nome_contratante, cpf_contratante, endereco_contratante, telefone_contratante,
+            tipo_evento, observacao_evento, data_evento, horario_inicio, horario_termino,
+            qtd_mesas, uso_piscina, uso_som, horario_entrega_bebidas, horario_recebimento_espaco,
+            pula_pula, piscina_bolinha, valor_locacao, valor_entrada, forma_pagamento_entrada,
+            data_vencimento_restante, aceite_funcionamento, aceite_uso_espaco,
+            aceite_obrigações_contratado, aceite_obrigações_contratante, aceite_cancelamento,
+            aceite_gerais, aceite_final_contrato
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+
+        valores = (
+            "Leandro Ruy Batista da Silva", "682.459.552-72",
+            "Rua Isaura Parente, esquina com a Rua Veneza, nº 100 - Rio Branco/AC",
+            "(68) 99921-7686 / 99241-4341",
+            dados['nome_contratante'], dados['cpf_contratante'], dados['endereco_contratante'],
+            dados['telefone_contratante'], dados['tipo_evento'], dados['observacao_evento'],
+            data_evento.strftime('%Y-%m-%d'), dados['horario_inicio'], dados['horario_termino'],
+            dados['qtd_mesas'], dados['uso_piscina'], dados['uso_som'], dados['horario_entrega_bebidas'],
+            dados['horario_recebimento_espaco'], dados['pula_pula'], dados['piscina_bolinha'],
+            valor_base, valor_entrada, dados['forma_pagamento_entrada'],
+            (data_evento - datetime.timedelta(days=5)).strftime('%Y-%m-%d'),
+            dados['aceite_funcionamento'], dados['aceite_uso_espaco'], dados['aceite_obrigações_contratado'],
+            dados['aceite_obrigações_contratante'], dados['aceite_cancelamento'], dados['aceite_gerais'],
+            dados['aceite_final_contrato']
+        )
+
+        cursor.execute(sql, valores)
+        conexao.commit()
+        id_gerado = cursor.lastrowid
+
+        cursor.close()
+        conexao.close()
+
+        return jsonify({
+            "sucesso": True,
+            "mensagem": "Contrato salvo com sucesso!",
+            "id_contrato": id_gerado,
+            "valor_total": round(valor_base, 2),
+            "valor_entrada": round(valor_entrada, 2)
+        }), 201
+
+    except mysql.connector.IntegrityError:
+        return jsonify({"sucesso": False, "mensagem": "Já existe um agendamento para esta data e horário!"}), 409
+    except Exception as erro:
+        return jsonify({"sucesso": False, "mensagem": f"Erro ao salvar: {str(erro)}"}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
