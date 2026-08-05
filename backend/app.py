@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 import mysql.connector
 from datetime import datetime
 import os
@@ -18,10 +18,9 @@ def conectar_banco():
         database=railway,
         port=3306
     )
-from flask import send_from_directory
 
 @app.route('/')
-def pagina_inicial():
+def home():
     return send_from_directory('static', 'contrato.html')
     
 @app.route('/salvar-contrato', methods=['POST'])
