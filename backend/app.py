@@ -12,11 +12,11 @@ app = Flask(__name__)
 # Conexão segura com o Railway
 def conectar_banco():
     return mysql.connector.connect(
-        host=os.getenv("DB_HOST"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME"),
-        port=int(os.getenv("DB_PORT", 3306))
+        host=mysql-dup.railway.internal,
+        user=root,
+        password=OZfxSLfuzcBXvPymsIFQZHJjMKNjISUt,
+        database=railway,
+        port=3306
     )
 
 @app.route('/salvar-contrato', methods=['POST'])
