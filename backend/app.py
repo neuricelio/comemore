@@ -18,7 +18,12 @@ def conectar_banco():
         database=railway,
         port=3306
     )
+from flask import send_from_directory
 
+@app.route('/')
+def pagina_inicial():
+    return send_from_directory('static', 'contrato.html')
+    
 @app.route('/salvar-contrato', methods=['POST'])
 def salvar_contrato():
     try:
