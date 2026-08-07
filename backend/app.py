@@ -1,28 +1,32 @@
 from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS  # ✅ Resolve o bloqueio do botão
 import mysql.connector
 from datetime import datetime
 import os
 from dotenv import load_dotenv
 
-# Carrega variáveis de ambiente
 load_dotenv()
 
-app = Flask(__name__)
+# ✅ Configuração correta da pasta static
+app = Flask(__name__, static_folder='static', static_url_path='')
+CORS(app)  # ✅ Libera o botão para funcionar sem erro
 
-# Conexão segura com o Railway
+# Conexão com o banco Railway
 def conectar_banco():
     return mysql.connector.connect(
-        host=mysql-dup.railway.internal,
-        user=root,
-        password=OZfxSLfuzcBXvPymsIFQZHJjMKNjISUt,
-        database=railway,
-        port=3306
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME"),
+        port=int(os.getenv("DB_PORT", 3306))
     )
 
+# ✅ Rota correta para exibir o contrato
 @app.route('/')
 def home():
     return send_from_directory('static', 'contrato.html')
-    
+
+# ✅ Rota para salvar
 @app.route('/salvar-contrato', methods=['POST'])
 def salvar_contrato():
     try:
@@ -32,7 +36,6 @@ def salvar_contrato():
         data_evento = datetime.strptime(dados['data_evento'], '%d/%m/%Y')
         dia_semana = data_evento.weekday()
 
-        # Valor base
         if dia_semana in range(0, 4):
             valor_base = 400.00
             valor_entrada = 150.00
@@ -52,7 +55,6 @@ def salvar_contrato():
 
         data_vencimento = data_evento.replace(day=data_evento.day - 5)
 
-        # Insere no banco
         conexao = conectar_banco()
         cursor = conexao.cursor()
 
@@ -94,16 +96,16 @@ def salvar_contrato():
 
         return jsonify({
             "sucesso": True,
-            "mensagem": "Contrato salvo com sucesso!",
+            "mensagem": "✅ Contrato salvo com sucesso!",
             "id_contrato": id_gerado,
             "valor_total": round(valor_base, 2),
             "valor_entrada": round(valor_entrada, 2)
         }), 201
 
     except mysql.connector.IntegrityError:
-        return jsonify({"sucesso": False, "mensagem": "Já existe agendamento para essa data/horário!"}), 409
+        return jsonify({"sucesso": False, "mensagem": "⚠️ Já existe agendamento para essa data/horário!"}), 409
     except Exception as erro:
-        return jsonify({"sucesso": False, "mensagem": f"Erro: {str(erro)}"}), 500
+        return jsonify({"sucesso": False, "mensagem": f"❌ Erro: {str(erro)}"}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 10000)))
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
