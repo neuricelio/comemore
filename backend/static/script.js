@@ -1,41 +1,46 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // Cria o botão dinamicamente
-    const botaoEnviar = document.createElement("button");
-    botaoEnviar.id = "btnSalvar";
-    botaoEnviar.textContent = "Salvar Contrato";
-    document.body.appendChild(botaoEnviar);
+    const form = document.getElementById("formContrato");
 
-    // Ação ao clicar
-    botaoEnviar.addEventListener("click", async () => {
-        const dados = {
-            nome_contratante: "Liz Gardênia Pereira Braga",
-            cpf_contratante: "033.823.732-11",
-            endereco_contratante: "Rua Nabuco de Araujo 267, conjunto Esperança",
-            telefone_contratante: "(68) 99932-1157",
-            tipo_evento: "Festa Aniversário ADULTO",
-            observacao_evento: "",
-            data_evento: "05/07/2026",
-            horario_inicio: "15:00",
-            horario_termino: "22:00",
-            qtd_mesas: 15,
-            uso_piscina: "sim",
-            uso_som: "sim",
-            horario_entrega_bebidas: "15:00",
-            horario_recebimento_espaco: "15:00",
-            pula_pula: false,
-            piscina_bolinha: false,
-            forma_pagamento_entrada: "pix",
-            aceite_funcionamento: true,
-            aceite_uso_espaco: true,
-            aceite_obrigacoes_contratado: true,
-            aceite_obrigacoes_contratante: true,
-            aceite_cancelamento: true,
-            aceite_gerais: true,
-            aceite_final_contrato: true
-        };
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const btn = document.getElementById("btnSalvar");
+        btn.disabled = true;
+        btn.textContent = "Enviando...";
 
         try {
-            // ✅ Caminho relativo — funciona local e no Render
+            // Coleta TODOS os dados preenchidos automaticamente
+            const formData = new FormData(form);
+
+            // Converte para objeto
+            const dados = {
+                nome_contratante: formData.get("nome_contratante"),
+                cpf_contratante: formData.get("cpf_contratante"),
+                endereco_contratante: formData.get("endereco_contratante"),
+                telefone_contratante: formData.get("telefone_contratante"),
+                tipo_evento: formData.get("tipo_evento"),
+                observacao_evento: formData.get("observacao_evento") || "",
+                data_evento: converterData(formData.get("data_evento")),
+                horario_inicio: formData.get("horario_inicio"),
+                horario_termino: formData.get("horario_termino"),
+                qtd_mesas: parseInt(formData.get("qtd_mesas")),
+                uso_piscina: formData.get("uso_piscina"),
+                uso_som: formData.get("uso_som"),
+                horario_entrega_bebidas: formData.get("horario_entrega_bebidas"),
+                horario_recebimento_espaco: formData.get("horario_recebimento_espaco"),
+                pula_pula: formData.get("pula_pula") === "true",
+                piscina_bolinha: formData.get("piscina_bolinha") === "true",
+                forma_pagamento_entrada: formData.get("forma_pagamento_entrada"),
+                aceite_funcionamento: !!formData.get("aceite_funcionamento"),
+                aceite_uso_espaco: !!formData.get("aceite_uso_espaco"),
+                aceite_obrigacoes_contratado: !!formData.get("aceite_obrigacoes_contratado"),
+                aceite_obrigacoes_contratante: !!formData.get("aceite_obrigacoes_contratante"),
+                aceite_cancelamento: !!formData.get("aceite_cancelamento"),
+                aceite_gerais: !!formData.get("aceite_gerais"),
+                aceite_final_contrato: !!formData.get("aceite_final_contrato")
+            };
+
+            // Envia para o servidor
             const resposta = await fetch("/salvar-contrato", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -43,10 +48,26 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             const resultado = await resposta.json();
-            alert(resultado.mensagem || resultado.erro);
+
+            if (resultado.sucesso) {
+                alert(`✅ ${resultado.mensagem}\nID do Contrato: ${resultado.id_contrato}\nValor Total: R$ ${resultado.valor_total}`);
+                form.reset();
+            } else {
+                alert(`⚠️ ${resultado.mensagem}`);
+            }
 
         } catch (erro) {
-            alert("❌ Erro de conexão: " + erro.message);
+            alert(`❌ Erro: ${erro.message}\nVerifique sua conexão e tente novamente.`);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "✅ Salvar e Enviar Contrato";
         }
     });
+
+    // Converte data do formato HTML (YYYY-MM-DD) para DD/MM/YYYY
+    function converterData(dataIso) {
+        if (!dataIso) return "";
+        const [ano, mes, dia] = dataIso.split("-");
+        return `${dia}/${mes}/${ano}`;
+    }
 });
