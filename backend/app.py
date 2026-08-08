@@ -39,6 +39,15 @@ def conectar_banco():
         print(f"❌ ERRO CONEXÃO: {e}")
         return None
 
+@app.route('/verificar-config')
+def verificar():
+    return f"""
+    DB_HOST: {os.environ.get('DB_HOST')}
+    DB_PORT: {os.environ.get('DB_PORT')}
+    DB_USER: {os.environ.get('DB_USER')}
+    DB_NAME: {os.environ.get('DB_NAME')}
+    """
+
 # ✅ Rota correta para exibir o contrato
 @app.route('/')
 def home():
