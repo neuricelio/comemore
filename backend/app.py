@@ -13,13 +13,31 @@ CORS(app)  # ✅ Libera o botão para funcionar sem erro
 
 # Conexão com o banco Railway
 def conectar_banco():
-    return mysql.connector.connect(
-        host=os.getenv("DB_HOST"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME"),
-        port=int(os.getenv("DB_PORT", 3306))
-    )
+    # Força usar as variáveis corretas
+    host = os.environ.get("DB_HOST")
+    port = os.environ.get("DB_PORT")
+    user = os.environ.get("DB_USER")
+    password = os.environ.get("DB_PASSWORD")
+    database = os.environ.get("DB_NAME")
+
+    # 🔍 LOG — aparece nos logs do Render para conferir
+    print(f"🔍 CONECTANDO EM: {host}:{port}")
+
+    if not host or not port or not user or not password:
+        print("❌ FALTAM VARIÁVEIS!")
+        return None
+
+    try:
+        return mysql.connector.connect(
+            host=host,
+            port=int(port),
+            user=user,
+            password=password,
+            database=database
+        )
+    except Exception as e:
+        print(f"❌ ERRO CONEXÃO: {e}")
+        return None
 
 # ✅ Rota correta para exibir o contrato
 @app.route('/')
