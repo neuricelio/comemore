@@ -4,17 +4,11 @@ import mysql.connector
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
-
-# 📧 Importa bibliotecas para e-mail e PDF
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 
 load_dotenv()
 
@@ -22,86 +16,111 @@ app = Flask(__name__, static_folder='static', static_url_path='')
 CORS(app)
 
 # ==============================================
-# 🔧 CONFIGURAÇÕES
+# 🔧 CONEXÃO COM BANCO
 # ==============================================
 def conectar_banco():
-    host = os.environ.get("DB_HOST")
-    port = os.environ.get("DB_PORT")
-    user = os.environ.get("DB_USER")
-    password = os.environ.get("DB_PASSWORD")
-    database = os.environ.get("DB_NAME")
     try:
         return mysql.connector.connect(
-            host=host, port=int(port), user=user, password=password, database=database
+            host=os.environ.get("DB_HOST"),
+            port=int(os.environ.get("DB_PORT")),
+            user=os.environ.get("DB_USER"),
+            password=os.environ.get("DB_PASSWORD"),
+            database=os.environ.get("DB_NAME")
         )
     except Exception as e:
         print(f"❌ Erro de conexão: {e}")
         return None
 
 # ==============================================
-# 📧 FUNÇÃO ENVIAR E-MAIL COM ANEXO
+# 📧 FUNÇÃO ENVIAR E-MAIL
 # ==============================================
-def enviar_email_com_pdf(destinatario, nome_contratante, id_contrato, dados, valor_total, valor_entrada):
+def enviar_email_contrato(destinatario, nome, id_contrato, dados, valor_total, valor_entrada):
     remetente = os.environ.get("EMAIL_REMETENTE")
     senha = os.environ.get("EMAIL_SENHA")
     smtp_servidor = os.environ.get("EMAIL_SMTP", "smtp.gmail.com")
     smtp_porta = int(os.environ.get("EMAIL_PORTA", 587))
 
-    if not remetente or not senha:
-        print("⚠️ E-mail não configurado — pulando envio")
+    if not remetente or not senha or not destinatario:
+        print("⚠️ E-mail não configurado ou destinatário vazio")
         return False
 
     try:
-        # Monta mensagem
         msg = MIMEMultipart()
         msg["From"] = remetente
         msg["To"] = destinatario
         msg["Subject"] = f"Contrato nº {id_contrato} — Espaço Comemore"
 
+        valor_pago = dados.get('valor_pago', 0)
+        restante = valor_total - valor_pago
+
         corpo = f"""
-Olá {nome_contratante},
+==================================================
+       CONTRATO DE LOCAÇÃO DE ESPAÇO
+     Espaço Comemore Festas e Eventos
+==================================================
 
-Seu contrato foi salvo com sucesso! 🎉
+CONTRATADO:
+Leandro Ruy Batista da Silva
+CPF: 682.459.552-72
+Tel: (68) 99921-7686 / 99241-4341
 
-📋 Dados do Contrato:
-• Número: {id_contrato}
-• Data do Evento: {dados['data_evento']}
-• Horário: {dados['horario_inicio']} às {dados['horario_termino']}
-• Valor Total: R$ {valor_total:.2f}
-• Valor de Entrada: R$ {valor_entrada:.2f}
-• Valor Pago: R$ {dados.get('valor_pago', 0):.2f}
+--------------------------------------------------
 
-Atenciosamente,
-Equipe Espaço Comemore Festas e Eventos
-📞 (68) 99921-7686
-        """
+CONTRATANTE:
+Nome: {nome}
+CPF: {dados['cpf_contratante']}
+Endereço: {dados['endereco_contratante']}
+Telefone: {dados['telefone_contratante']}
+
+--------------------------------------------------
+
+DADOS DO EVENTO:
+Tipo: {dados['tipo_evento']}
+Data: {dados['data_evento']}
+Horário: {dados['horario_inicio']} às {dados['horario_termino']}
+Mesas: {dados['qtd_mesas']}
+Piscina: {dados['uso_piscina']}
+Som: {dados['uso_som']}
+Pula-Pula: {'SIM' if dados.get('pula_pula') else 'NÃO'}
+Piscina de Bolinhas: {'SIM' if dados.get('piscina_bolinha') else 'NÃO'}
+
+--------------------------------------------------
+
+VALORES:
+Valor Total: R$ {valor_total:.2f}
+Entrada:     R$ {valor_entrada:.2f}
+Pago:        R$ {valor_pago:.2f}
+Restante:    R$ {restante:.2f}
+Pagamento:   {dados['forma_pagamento_entrada']}
+
+--------------------------------------------------
+
+Rio Branco/AC, {datetime.now().strftime('%d/%m/%Y')}
+
+Declaro que li e concordo com todos os termos.
+
+==================================================
+Espaço Comemore — Tel: (68) 99921-7686
+Contrato nº {id_contrato}
+==================================================
+        """.strip()
+
         msg.attach(MIMEText(corpo, "plain"))
 
-        # 📄 Gerar PDF temporário
-        nome_arquivo = f"/tmp/Contrato_{id_contrato}.pdf"
-        gerar_pdf_contrato(nome_arquivo, id_contrato, dados, valor_total, valor_entrada)
+        # Anexar cópia do contrato em texto
+        anexo = MIMEBase("text", "plain")
+        anexo.set_payload(corpo.encode('utf-8'))
+        encoders.encode_base64(anexo)
+        anexo.add_header("Content-Disposition", f"attachment; filename=Contrato_{id_contrato}.txt")
+        msg.attach(anexo)
 
-        # Anexar PDF
-        with open(nome_arquivo, "rb") as anexo:
-            parte = MIMEBase("application", "octet-stream")
-            parte.set_payload(anexo.read())
-        encoders.encode_base64(parte)
-        parte.add_header(
-            "Content-Disposition",
-            f"attachment; filename=Contrato_{id_contrato}.pdf",
-        )
-        msg.attach(parte)
-
-        # 📤 Enviar
-        servidor = smtplib.SMTP(smtp_servidor, smtp_porta)
-        servidor.starttls()
-        servidor.login(remetente, senha)
-        texto = servidor.as_string()
-        servidor.sendmail(remetente, destinatario, texto)
-        servidor.quit()
+        # Enviar
+        with smtplib.SMTP(smtp_servidor, smtp_porta) as servidor:
+            servidor.starttls()
+            servidor.login(remetente, senha)
+            servidor.send_message(msg)
 
         print(f"✅ E-mail enviado para {destinatario}")
-        os.remove(nome_arquivo)  # Apaga arquivo temporário
         return True
 
     except Exception as e:
@@ -109,97 +128,11 @@ Equipe Espaço Comemore Festas e Eventos
         return False
 
 # ==============================================
-# 📄 GERAR PDF COM O CONTRATO
-# ==============================================
-def gerar_pdf_contrato(caminho_arquivo, id_contrato, dados, valor_total, valor_entrada):
-    pagina = canvas.Canvas(caminho_arquivo, pagesize=A4)
-    largura, altura = A4
-    y = altura - 50
-
-    def linha(texto, deslocamento=0):
-        nonlocal y
-        pagina.drawString(50 + deslocamento, y, texto)
-        y -= 22
-
-    # Cabeçalho
-    pagina.setFont("Helvetica-Bold", 18)
-    linha("CONTRATO DE LOCAÇÃO DE ESPAÇO", 100)
-    pagina.setFont("Helvetica", 12)
-    linha("Espaço Comemore Festas e Eventos", 130)
-    linha("-" * 80, 50)
-    y -= 10
-
-    # Dados do Contratado
-    pagina.setFont("Helvetica-Bold", 12)
-    linha("CONTRATADO:")
-    pagina.setFont("Helvetica", 11)
-    linha("Leandro Ruy Batista da Silva")
-    linha("CPF: 682.459.552-72")
-    linha("Telefone: (68) 99921-7686 / 99241-4341")
-    linha("")
-
-    # Dados do Contratante
-    pagina.setFont("Helvetica-Bold", 12)
-    linha("CONTRATANTE:")
-    pagina.setFont("Helvetica", 11)
-    linha(f"Nome: {dados['nome_contratante']}")
-    linha(f"CPF: {dados['cpf_contratante']}")
-    linha(f"Endereço: {dados['endereco_contratante']}")
-    linha(f"Telefone: {dados['telefone_contratante']}")
-    linha("")
-
-    # Dados do Evento
-    pagina.setFont("Helvetica-Bold", 12)
-    linha("DADOS DO EVENTO:")
-    pagina.setFont("Helvetica", 11)
-    linha(f"Tipo: {dados['tipo_evento']}")
-    linha(f"Data: {dados['data_evento']}")
-    linha(f"Horário: {dados['horario_inicio']} às {dados['horario_termino']}")
-    linha(f"Mesas: {dados['qtd_mesas']}")
-    linha(f"Piscina: {dados['uso_piscina']}")
-    linha(f"Som: {dados['uso_som']}")
-    linha(f"Pula-Pula: {'SIM' if dados.get('pula_pula') else 'NÃO'}")
-    linha(f"Piscina de Bolinhas: {'SIM' if dados.get('piscina_bolinha') else 'NÃO'}")
-    linha("")
-
-    # Valores
-    valor_pago = dados.get('valor_pago', 0)
-    restante = valor_total - valor_pago
-    pagina.setFont("Helvetica-Bold", 12)
-    linha("VALORES:")
-    pagina.setFont("Helvetica", 11)
-    linha(f"Valor Total da Locação: R$ {valor_total:.2f}")
-    linha(f"Valor de Entrada: R$ {valor_entrada:.2f}")
-    linha(f"Valor Pago: R$ {valor_pago:.2f}")
-    linha(f"Valor Restante: R$ {restante:.2f}")
-    linha(f"Forma de Pagamento: {dados['forma_pagamento_entrada']}")
-    linha("")
-    linha("")
-
-    # Assinaturas
-    linha("Declaro que li, conferi e concordo com todos os termos.")
-    linha("")
-    linha("__________________________________________________")
-    linha(f"{dados['nome_contratante']} — Contratante")
-    linha("")
-    linha("__________________________________________________")
-    linha("Leandro Ruy Batista da Silva — Contratado")
-    linha("")
-    linha("")
-    linha(f"Contrato nº {id_contrato} — Rio Branco/AC, {datetime.now().strftime('%d/%m/%Y')}")
-
-    pagina.save()
-
-# ==============================================
 # 🌐 ROTAS
 # ==============================================
 @app.route('/')
 def home():
     return send_from_directory('static', 'contrato.html')
-
-@app.route('/verificar-config')
-def verificar():
-    return f"DB_HOST: {os.environ.get('DB_HOST')}<br>DB_PORT: {os.environ.get('DB_PORT')}"
 
 @app.route('/salvar-contrato', methods=['POST'])
 def salvar_contrato():
@@ -212,7 +145,7 @@ def salvar_contrato():
         data_evento = datetime(ano, mes, dia)
         dia_semana = data_evento.weekday()
 
-        # Calcular valores
+        # Calcular valor base
         if dia_semana in range(0, 4):
             valor_base = 400.00
             valor_entrada = 150.00
@@ -230,7 +163,7 @@ def salvar_contrato():
         if dados.get('pula_pula'): valor_base += 110.00
         if dados.get('piscina_bolinha'): valor_base += 110.00
 
-        # Promoção: os dois juntos = R$ 200 (economiza R$20)
+        # Promoção: kit = R$ 200 (economiza R$20)
         if dados.get('pula_pula') and dados.get('piscina_bolinha'):
             valor_base -= 20.00
 
@@ -245,21 +178,20 @@ def salvar_contrato():
         sql = """
         INSERT INTO contratos (
             nome_contratado, cpf_contratado, endereco_contratado, telefone_contratado,
-            nome_contratante, cpf_contratante, endereco_contratante, telefone_contratante,
+            nome_contratante, cpf_contratante, endereco_contratante, telefone_contratante, email_contratante,
             tipo_evento, observacao_evento, data_evento, horario_inicio, horario_termino,
             qtd_mesas, uso_piscina, uso_som, horario_entrega_bebidas, horario_recebimento_espaco,
             pula_pula, piscina_bolinha, valor_locacao, valor_entrada, valor_pago, forma_pagamento_entrada,
             data_vencimento_restante, aceite_funcionamento, aceite_uso_espaco,
             aceite_obrigacoes_contratado, aceite_obrigacoes_contratante, aceite_cancelamento,
             aceite_gerais, aceite_final_contrato, status_contrato
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         valores = (
             "Leandro Ruy Batista da Silva", "682.459.552-72",
-            "Rua Isaura Parente, esquina com a Rua Veneza, nº 100 - Rio Branco/AC",
-            "(68) 99921-7686 / 99241-4341",
+            "Rua Isaura Parente, nº 100 - Rio Branco/AC", "(68) 99921-7686 / 99241-4341",
             dados['nome_contratante'], dados['cpf_contratante'],
-            dados['endereco_contratante'], dados['telefone_contratante'],
+            dados['endereco_contratante'], dados['telefone_contratante'], dados.get('email_contratante', ''),
             dados['tipo_evento'], dados.get('observacao_evento', ''),
             data_evento.strftime('%Y-%m-%d'), dados['horario_inicio'], dados['horario_termino'],
             dados['qtd_mesas'], dados['uso_piscina'], dados['uso_som'],
@@ -278,30 +210,31 @@ def salvar_contrato():
         cursor.close()
         conexao.close()
 
-        # 📧 ENVIAR E-MAIL (se tiver campo e-mail, senão avisa)
-        email_enviado = False
-        email_destinatario = dados.get('email_contratante')  # ← vamos adicionar esse campo
-        if email_destinatario:
-            email_enviado = enviar_email_com_pdf(
-                email_destinatario,
-                dados['nome_contratante'],
-                id_contrato,
-                dados,
-                valor_base,
-                valor_entrada
-            )
+        # 📧 Enviar e-mail
+        email_ok = enviar_email_contrato(
+            dados.get('email_contratante'),
+            dados['nome_contratante'],
+            id_contrato,
+            dados,
+            valor_base,
+            valor_entrada
+        )
+
+        mensagem = f"✅ Contrato salvo com sucesso! ID: {id_contrato}"
+        if email_ok:
+            mensagem += " | 📧 E-mail enviado!"
 
         return jsonify({
             "sucesso": True,
-            "mensagem": f"✅ Contrato salvo!{' E-mail enviado!' if email_enviado else ''}",
+            "mensagem": mensagem,
             "id_contrato": id_contrato,
             "valor_total": round(valor_base, 2),
             "valor_entrada": round(valor_entrada, 2),
-            "email_enviado": email_enviado
+            "email_enviado": email_ok
         }), 201
 
     except Exception as erro:
-        print(f"❌ ERRO: {erro}")
+        print(f"❌ ERRO GERAL: {erro}")
         return jsonify({"sucesso": False, "mensagem": f"❌ Erro: {str(erro)}"}), 500
 
 if __name__ == '__main__':
