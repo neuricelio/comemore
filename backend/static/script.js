@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 cpf_contratante: formData.get("cpf_contratante"),
                 endereco_contratante: formData.get("endereco_contratante"),
                 telefone_contratante: formData.get("telefone_contratante"),
+                email_contratante: formData.get("email_contratante"),
                 tipo_evento: formData.get("tipo_evento"),
                 observacao_evento: formData.get("observacao_evento") || "",
                 data_evento: converterData(formData.get("data_evento")),
