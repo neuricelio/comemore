@@ -176,4 +176,70 @@ body {
     background: #dcfce7;
     border-radius: 4px;
 }
+/* ✅ Logo no topo */
+.logo-topo {
+    text-align: center;
+    margin-bottom: 15px;
+    padding: 10px;
+}
 
+.logo-topo img {
+    max-width: 220px;
+    height: auto;
+}
+
+/* ✅ Estilo dos Itens Adicionais */
+.secao-extras {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border-left: 4px solid #2563eb;
+}
+
+.secao-extras h3 {
+    font-size: 15px;
+    margin-bottom: 12px;
+    color: #1e40af;
+}
+
+.opcao-item {
+    margin: 8px 0;
+}
+
+.titulo-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+.valor-item {
+    font-weight: bold;
+    color: #16a34a;
+}
+
+/* ✅ Destaque da Promoção */
+.opcao-item.promocao {
+    margin-top: 12px;
+    padding: 10px;
+    background: #fef3c7;
+    border-radius: 6px;
+    border: 2px solid #f59e0b;
+}
+
+.promocao-valor {
+    color: #b91c1c;
+    font-size: 14px;
+}
+
+/* Campos de horário personalizado */
+#horarios_personalizados label {
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+#horarios_personalizados input {
+    margin-bottom: 6px;
+}
