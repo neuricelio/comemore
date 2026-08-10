@@ -3,5 +3,3 @@ flask-cors
 mysql-connector-python
 python-dotenv
 gunicorn
-reportlab
-python-dotenv
