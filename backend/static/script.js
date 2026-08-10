@@ -11,19 +11,25 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const formData = new FormData(form);
 
-            // Valida: todos os termos marcados?
-            const aceites = [
-                "aceite_funcionamento", "aceite_uso_espaco",
-                "aceite_obrigacoes_contratado", "aceite_obrigacoes_contratante",
-                "aceite_cancelamento", "aceite_gerais", "aceite_final_contrato"
-            ];
-            const faltam = aceites.filter(nome => !formData.get(nome));
-            if (faltam.length > 0) {
-                alert("⚠️ Você precisa LER e CONCORDAR com TODOS os termos antes de enviar!");
-                return;
+            // ✅ Define horário com base na opção escolhida
+            let horario_inicio, horario_termino;
+            const tipo_horario = formData.get("horario_tipo");
+
+            if (tipo_horario === 'dia') {
+                horario_inicio = "09:00";
+                horario_termino = "17:00";
+            } else if (tipo_horario === 'noite_semana') {
+                horario_inicio = "17:00";
+                horario_termino = "23:00";
+            } else if (tipo_horario === 'noite_sabado') {
+                horario_inicio = "17:00";
+                horario_termino = "02:00";
+            } else {
+                horario_inicio = formData.get("horario_inicio");
+                horario_termino = formData.get("horario_termino");
             }
 
-            // Coleta dados
+            // ✅ Dados do formulário
             const dados = {
                 nome_contratante: formData.get("nome_contratante"),
                 cpf_contratante: formData.get("cpf_contratante"),
@@ -32,8 +38,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 tipo_evento: formData.get("tipo_evento"),
                 observacao_evento: formData.get("observacao_evento") || "",
                 data_evento: converterData(formData.get("data_evento")),
-                horario_inicio: formData.get("horario_inicio"),
-                horario_termino: formData.get("horario_termino"),
+                horario_inicio: horario_inicio,
+                horario_termino: horario_termino,
                 qtd_mesas: parseInt(formData.get("qtd_mesas")),
                 uso_piscina: formData.get("uso_piscina"),
                 uso_som: formData.get("uso_som"),
@@ -42,6 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 pula_pula: formData.get("pula_pula") === "true",
                 piscina_bolinha: formData.get("piscina_bolinha") === "true",
                 forma_pagamento_entrada: formData.get("forma_pagamento_entrada"),
+                valor_pago: parseFloat(formData.get("valor_pago")) || 0,
                 aceite_funcionamento: true,
                 aceite_uso_espaco: true,
                 aceite_obrigacoes_contratado: true,
@@ -51,6 +58,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 aceite_final_contrato: true
             };
 
+            // ✅ Validação
+            if (!horario_inicio || !horario_termino) {
+                alert("⚠️ Preencha os horários de início e término!");
+                return;
+            }
+
+            console.log("📤 Enviando:", dados);
+
             // Envia para o servidor
             const resposta = await fetch("/salvar-contrato", {
                 method: "POST",
@@ -59,11 +74,12 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             const resultado = await resposta.json();
+            console.log("📥 Resposta:", resultado);
 
             if (resultado.sucesso) {
-                alert(`✅ ${resultado.mensagem}\nID do Contrato: ${resultado.id_contrato}\nValor Total: R$ ${resultado.valor_total}`);
+                alert(`✅ ${resultado.mensagem}\nID: ${resultado.id_contrato}\nTotal: R$ ${resultado.valor_total}\nValor Pago: R$ ${dados.valor_pago}`);
                 
-                // 📄 GERA E BAIXA O PDF automaticamente
+                // 📄 Gera e baixa o contrato em PDF
                 gerarPDF(dados, resultado);
                 
                 form.reset();
@@ -72,8 +88,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
         } catch (erro) {
-            console.error("Erro:", erro);
-            alert(`❌ Erro: ${erro.message || 'Não foi possível conectar ao servidor'}`);
+            console.error("❌ Erro:", erro);
+            alert(`❌ Erro de conexão: ${erro.message || 'Não foi possível conectar ao servidor'}`);
         } finally {
             btn.disabled = false;
             btn.textContent = "✅ Salvar e Enviar Contrato";
@@ -87,9 +103,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return `${dia}/${mes}/${ano}`;
     }
 
-    // 📄 Função para gerar e baixar PDF
+    // 📄 Gera PDF
     function gerarPDF(dados, res) {
         const dataHoje = new Date().toLocaleDateString('pt-BR');
+        const valorRestante = (res.valor_total - dados.valor_pago).toFixed(2);
         
         const conteudo = `
 ====================================================================
@@ -125,8 +142,9 @@ Piscina de Bolinhas: ${dados.piscina_bolinha ? 'SIM' : 'NÃO'}
 --------------------------------------------------------------------
 
 VALORES:
-Valor Total da Locação: R$ ${res.valor_total}
-Valor de Entrada: R$ ${res.valor_entrada}
+Valor Total da Locação....: R$ ${res.valor_total}
+Valor Pago pelo Cliente....: R$ ${dados.valor_pago.toFixed(2)}
+Valor Restante a Pagar.....: R$ ${valorRestante}
 Forma de Pagamento: ${dados.forma_pagamento_entrada}
 
 --------------------------------------------------------------------
@@ -146,7 +164,6 @@ Contrato nº ${res.id_contrato} - Gerado em ${dataHoje}
 ====================================================================
         `.trim();
 
-        // Cria arquivo e baixa
         const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -157,6 +174,6 @@ Contrato nº ${res.id_contrato} - Gerado em ${dataHoje}
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        alert("✅ Contrato salvo! O arquivo foi baixado no seu dispositivo!");
+        alert("✅ Contrato salvo com sucesso!\nO arquivo foi baixado no seu dispositivo!");
     }
 });
