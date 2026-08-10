@@ -8,6 +8,11 @@
 </head>
 <body>
     <form id="formContrato">
+        <!-- ✅ LOGO NO TOPO -->
+        <div class="logo-topo">
+            <img src="/logo.png" alt="Logo Espaço Comemore" onerror="this.style.display='none'">
+        </div>
+
         <div class="cabecalho">
             <h1>Contrato de Locação de Espaço para Eventos</h1>
             <p><strong>BUFFET ESPAÇO COMEMORE FESTAS E EVENTOS</strong><br>
@@ -24,7 +29,7 @@
             </div>
         </div>
 
-        <!-- Dados do Contratante (PREENCHER AQUI) -->
+        <!-- Dados do Contratante -->
         <div class="secao">
             <h2>2. CONTRATANTE (Cliente)</h2>
             <div class="dados campos">
@@ -65,11 +70,23 @@
                 <label>Data do Evento:</label>
                 <input type="date" name="data_evento" id="data_evento" required>
 
-                <label>Horário de Início:</label>
-                <input type="time" name="horario_inicio" required>
+                <!-- ✅ HORÁRIOS — ComboBox com opções pré-definidas -->
+                <label>Horários:</label>
+                <select name="horario_tipo" id="horario_tipo" required onchange="mostrarHorariosPersonalizados()">
+                    <option value="">Selecione...</option>
+                    <option value="dia">DIA — das 09:00 às 17:00 (segunda a domingo)</option>
+                    <option value="noite_semana">NOITE — das 17:00 às 23:00 (segunda a sexta e domingo)</option>
+                    <option value="noite_sabado">NOITE — das 17:00 às 02:00 (sábado - aniversário adulto)</option>
+                    <option value="outros">Outros (especificar abaixo)</option>
+                </select>
 
-                <label>Horário de Término:</label>
-                <input type="time" name="horario_termino" required>
+                <!-- ✅ CAMPOS PERSONALIZADOS — aparecem só quando escolhe "Outros" -->
+                <div id="horarios_personalizados" style="display: none; padding-left: 15px; border-left: 3px solid #2563eb; margin: 8px 0;">
+                    <label>Horário de Início:</label>
+                    <input type="time" name="horario_inicio" id="horario_inicio_personalizado">
+                    <label>Horário de Término:</label>
+                    <input type="time" name="horario_termino" id="horario_termino_personalizado">
+                </div>
 
                 <label>Quantidade de Mesas:</label>
                 <select name="qtd_mesas">
@@ -98,24 +115,44 @@
                 <label>Horário de Entrega do Espaço (Decoração):</label>
                 <input type="time" name="horario_recebimento_espaco" required>
 
-                <label>Pula-Pula:</label>
-                <div class="radio-linha">
-                    <label><input type="radio" name="pula_pula" value="false" checked> Não</label>
-                    <label><input type="radio" name="pula_pula" value="true"> Sim (+ R$ 110,00)</label>
-                </div>
+                <!-- ✅ MELHORADO: Pula-Pula + Piscina de Bolinhas + PROMOÇÃO -->
+                <div class="secao-extras">
+                    <h3>Itens Adicionais</h3>
+                    
+                    <div class="opcao-item">
+                        <label class="titulo-item">
+                            <input type="checkbox" name="pula_pula" id="chk_pula_pula" value="true">
+                            Pula-Pula — <span class="valor-item">+ R$ 110,00</span>
+                        </label>
+                    </div>
 
-                <label>Piscina de Bolinhas:</label>
-                <div class="radio-linha">
-                    <label><input type="radio" name="piscina_bolinha" value="false" checked> Não</label>
-                    <label><input type="radio" name="piscina_bolinha" value="true"> Sim (+ R$ 110,00)</label>
+                    <div class="opcao-item">
+                        <label class="titulo-item">
+                            <input type="checkbox" name="piscina_bolinha" id="chk_piscina_bolinha" value="true">
+                            Piscina de Bolinhas — <span class="valor-item">+ R$ 110,00</span>
+                        </label>
+                    </div>
+
+                    <!-- ✅ PROMOÇÃO ESPECIAL -->
+                    <div class="opcao-item promocao">
+                        <label class="titulo-item">
+                            <input type="checkbox" name="promocao_kit" id="chk_promocao" onchange="atualizarPromocao()">
+                            🎉 KIT PROMOCIONAL — Pula-Pula + Piscina de Bolinhas — 
+                            <span class="valor-item promocao-valor">APENAS R$ 200,00 (Economize R$ 20,00!)</span>
+                        </label>
+                    </div>
                 </div>
 
                 <label>Forma de Pagamento da Entrada:</label>
-                <select name="forma_pagamento_entrada">
+                <select name="forma_pagamento_entrada" id="forma_pagamento_entrada">
                     <option value="pix">PIX</option>
                     <option value="dinheiro">Dinheiro</option>
                     <option value="transferencia">Transferência Bancária</option>
                 </select>
+
+                <!-- ✅ NOVO CAMPO: Valor Pago -->
+                <label>Valor Pago (R$):</label>
+                <input type="number" step="0.01" min="0" name="valor_pago" id="valor_pago" placeholder="0,00" required>
             </div>
         </div>
 
@@ -141,5 +178,45 @@
     </form>
 
     <script src="/script.js"></script>
+    <script>
+        // ✅ Mostra/esconde campos de horário personalizado
+        function mostrarHorariosPersonalizados() {
+            const select = document.getElementById('horario_tipo');
+            const div = document.getElementById('horarios_personalizados');
+            const hInicio = document.getElementById('horario_inicio_personalizado');
+            const hTermino = document.getElementById('horario_termino_personalizado');
+
+            if (select.value === 'outros') {
+                div.style.display = 'block';
+                hInicio.required = true;
+                hTermino.required = true;
+            } else {
+                div.style.display = 'none';
+                hInicio.required = false;
+                hTermino.required = false;
+                hInicio.value = '';
+                hTermino.value = '';
+            }
+        }
+
+        // ✅ Promoção: marca/desmarca os dois itens juntos
+        function atualizarPromocao() {
+            const promocao = document.getElementById('chk_promocao');
+            const pula = document.getElementById('chk_pula_pula');
+            const bolinha = document.getElementById('chk_piscina_bolinha');
+
+            if (promocao.checked) {
+                pula.checked = true;
+                bolinha.checked = true;
+                pula.disabled = true;
+                bolinha.disabled = true;
+            } else {
+                pula.checked = false;
+                bolinha.checked = false;
+                pula.disabled = false;
+                bolinha.disabled = false;
+            }
+        }
+    </script>
 </body>
 </html>
