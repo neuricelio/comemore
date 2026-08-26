@@ -7,21 +7,23 @@
     <link rel="stylesheet" href="/estilo.css">
 </head>
 <body>
-    <form id="formContrato" action="https://formspree.io/f/xyeygyee">
+    <!-- ✅ FORMULÁRIO CORRIGIDO PARA O FORMSPREE -->
+    <form id="formContrato" action="https://formspree.io/f/xyeygyee" method="POST">
+        <!-- Campo oculto: e-mail de resposta (aparece como "De:") -->
+        <input type="hidden" name="_replyto" id="campo_email_resposta">
+
         <!-- ✅ LOGO NO TOPO -->
         <div class="logo-topo">
             <img src="/logo.png" alt="Logo Espaço Comemore" onerror="this.style.display='none'">
         </div>
-
         <div class="cabecalho">
             <h1>Contrato de Locação de Espaço para Eventos</h1>
             <p><strong>BUFFET ESPAÇO COMEMORE FESTAS E EVENTOS</strong><br>
             Telefone: (68) 99921-7686 | Rua Isaura Parente, nº 100 — Rio Branco/AC</p>
             <!-- ✅ NOVO CAMPO: E-mail -->
             <label>E-mail (para receber o contrato):</label>
-            <input type="email" name="email_contratante" placeholder="seu@email.com" required>
+            <input type="email" name="email_contratante" id="email_contratante" placeholder="seu@email.com" required>
         </div>
-
         <!-- Dados do Contratado (fixo) -->
         <div class="secao">
             <h2>1. CONTRATADO</h2>
@@ -31,25 +33,20 @@
                 <p>Telefone: (68) 99921-7686 / 99241-4341</p>
             </div>
         </div>
-
         <!-- Dados do Contratante -->
         <div class="secao">
             <h2>2. CONTRATANTE (Cliente)</h2>
             <div class="dados campos">
                 <label>Nome Completo:</label>
                 <input type="text" name="nome_contratante" required>
-
                 <label>CPF:</label>
                 <input type="text" name="cpf_contratante" placeholder="000.000.000-00" required>
-
                 <label>Endereço Completo:</label>
                 <input type="text" name="endereco_contratante" required>
-
                 <label>Telefone / WhatsApp:</label>
                 <input type="text" name="telefone_contratante" placeholder="(68) 99999-9999" required>
             </div>
         </div>
-
         <!-- Dados do Evento -->
         <div class="secao">
             <h2>3. DADOS DO EVENTO</h2>
@@ -66,13 +63,10 @@
                     <option value="Festa CONFRATERNIZAÇÃO FAMILIAR">Confraternização</option>
                     <option value="Outro">Outro</option>
                 </select>
-
                 <label>Observações (opcional):</label>
                 <textarea name="observacao_evento" rows="2"></textarea>
-
                 <label>Data do Evento:</label>
                 <input type="date" name="data_evento" id="data_evento" required>
-
                 <!-- ✅ HORÁRIOS — ComboBox com opções pré-definidas -->
                 <label>Horários:</label>
                 <select name="horario_tipo" id="horario_tipo" required onchange="mostrarHorariosPersonalizados()">
@@ -82,7 +76,6 @@
                     <option value="noite_sabado">NOITE — das 17:00 às 02:00 (sábado - aniversário adulto)</option>
                     <option value="outros">Outros (especificar abaixo)</option>
                 </select>
-
                 <!-- ✅ CAMPOS PERSONALIZADOS — aparecem só quando escolhe "Outros" -->
                 <div id="horarios_personalizados" style="display: none; padding-left: 15px; border-left: 3px solid #2563eb; margin: 8px 0;">
                     <label>Horário de Início:</label>
@@ -90,34 +83,28 @@
                     <label>Horário de Término:</label>
                     <input type="time" name="horario_termino" id="horario_termino_personalizado">
                 </div>
-
                 <label>Quantidade de Mesas:</label>
                 <select name="qtd_mesas">
                     <option value="15">15 mesas (incluso)</option>
                     <option value="20">20 mesas (+ R$ 60,00)</option>
                     <option value="25">25 mesas (+ R$ 120,00)</option>
                 </select>
-
                 <label>Uso da Piscina:</label>
                 <select name="uso_piscina">
                     <option value="sim">Com uso da piscina</option>
                     <option value="sem_uso">Sem uso durante o evento</option>
                     <option value="nao">Piscina fechada/com capa</option>
                 </select>
-
                 <label>Sistema de Som:</label>
                 <select name="uso_som">
                     <option value="nao">Não utilizar</option>
                     <option value="sim">Utilizar sem microfone</option>
                     <option value="sim_microfone">Utilizar com microfone (+ R$ 30,00)</option>
                 </select>
-
                 <label>Horário de Entrega das Bebidas:</label>
                 <input type="time" name="horario_entrega_bebidas" required>
-
                 <label>Horário de Entrega do Espaço (Decoração):</label>
                 <input type="time" name="horario_recebimento_espaco" required>
-
                 <!-- ✅ MELHORADO: Pula-Pula + Piscina de Bolinhas + PROMOÇÃO -->
                 <div class="secao-extras">
                     <h3>Itens Adicionais</h3>
@@ -128,14 +115,12 @@
                             Pula-Pula — <span class="valor-item">+ R$ 110,00</span>
                         </label>
                     </div>
-
                     <div class="opcao-item">
                         <label class="titulo-item">
                             <input type="checkbox" name="piscina_bolinha" id="chk_piscina_bolinha" value="true">
                             Piscina de Bolinhas — <span class="valor-item">+ R$ 110,00</span>
                         </label>
                     </div>
-
                     <!-- ✅ PROMOÇÃO ESPECIAL -->
                     <div class="opcao-item promocao">
                         <label class="titulo-item">
@@ -145,20 +130,17 @@
                         </label>
                     </div>
                 </div>
-
                 <label>Forma de Pagamento da Entrada:</label>
                 <select name="forma_pagamento_entrada" id="forma_pagamento_entrada">
                     <option value="pix">PIX</option>
                     <option value="dinheiro">Dinheiro</option>
                     <option value="transferencia">Transferência Bancária</option>
                 </select>
-
                 <!-- ✅ NOVO CAMPO: Valor Pago -->
                 <label>Valor Pago (R$):</label>
                 <input type="number" step="0.01" min="0" name="valor_pago" id="valor_pago" placeholder="0,00" required>
             </div>
         </div>
-
         <!-- Termos de Aceite -->
         <div class="secao">
             <h2>4. ACEITE DOS TERMOS</h2>
@@ -175,20 +157,26 @@
                 <label><input type="checkbox" name="aceite_final_contrato" required> Declaro que li, conferi e concordo com TODOS os termos deste contrato</label>
             </div>
         </div>
-
         <!-- Botão -->
         <button type="submit" id="btnSalvar">✅ Salvar e Enviar Contrato</button>
+
+        <!-- ✅ MENSAGEM DE SUCESSO / ERRO -->
+        <div id="mensagem-status" style="margin-top: 20px; padding: 15px; border-radius: 8px; display: none;"></div>
     </form>
 
     <script src="/script.js"></script>
     <script>
+        // ✅ Preenche o campo oculto de resposta com o e-mail do cliente
+        document.getElementById('email_contratante').addEventListener('input', function() {
+            document.getElementById('campo_email_resposta').value = this.value;
+        });
+
         // ✅ Mostra/esconde campos de horário personalizado
         function mostrarHorariosPersonalizados() {
             const select = document.getElementById('horario_tipo');
             const div = document.getElementById('horarios_personalizados');
             const hInicio = document.getElementById('horario_inicio_personalizado');
             const hTermino = document.getElementById('horario_termino_personalizado');
-
             if (select.value === 'outros') {
                 div.style.display = 'block';
                 hInicio.required = true;
@@ -207,7 +195,6 @@
             const promocao = document.getElementById('chk_promocao');
             const pula = document.getElementById('chk_pula_pula');
             const bolinha = document.getElementById('chk_piscina_bolinha');
-
             if (promocao.checked) {
                 pula.checked = true;
                 bolinha.checked = true;
@@ -220,6 +207,41 @@
                 bolinha.disabled = false;
             }
         }
+
+        // ✅ INTERCEPTA ENVIO E MOSTRA MENSAGEM (sem erro de JSON!)
+        const form = document.getElementById('formContrato');
+        const statusDiv = document.getElementById('mensagem-status');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault(); // evita recarregar a página
+
+            statusDiv.style.display = 'block';
+            statusDiv.style.background = '#dbeafe';
+            statusDiv.style.color = '#1e40af';
+            statusDiv.textContent = '📤 Enviando...';
+
+            try {
+                const formData = new FormData(form);
+                const resposta = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (resposta.ok) {
+                    statusDiv.style.background = '#dcfce7';
+                    statusDiv.style.color = '#166534';
+                    statusDiv.innerHTML = '✅ <strong>Contrato enviado com sucesso!</strong><br>Verifique seu e-mail (incluindo a caixa de spam).';
+                    form.reset();
+                } else {
+                    throw new Error('Servidor respondeu com erro');
+                }
+            } catch (erro) {
+                statusDiv.style.background = '#fee2e2';
+                statusDiv.style.color = '#991b1b';
+                statusDiv.innerHTML = '❌ <strong>Erro ao enviar.</strong> Tente novamente ou entre em contato.';
+            }
+        });
     </script>
 </body>
 </html>
