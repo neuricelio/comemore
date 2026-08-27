@@ -190,7 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =========================================================
-    // ✅ ENDEREÇO — ACEITA ESPAÇOS + Formatação Automática
+    // ✅ ENDEREÇO — CORRIGIDO: ACEITA ESPAÇOS LIVREMENTE
     // Padrão: Rua das Flores, 123, Centro, CEP 69901-166 — Rio Branco/AC
     // =========================================================
     if (campoEnd) {
@@ -216,7 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Passo 2: Divide por vírgulas — PRESERVA espaços INTERNOS
             const partes = principal.split(',').map(p => {
-                // Apenas remove espaços EXCEDENTES nas BORDAS, mantém internos
+                // Apenas remove espaços EXCEDENTES nas BORDAS, mantém INTERNOS
                 return p.trim();
             }).filter(p => p.length > 0);
 
@@ -252,6 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+
     // ✅ Inicializa horários e promoção
     if (selectHorario) {
         selectHorario.addEventListener('change', mostrarHorariosPersonalizados);
