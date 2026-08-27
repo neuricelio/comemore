@@ -6,7 +6,34 @@ const campoReplyto = document.getElementById('campo_email_resposta');
 const campoCopia = document.getElementById('campo_copia_cliente');
 const form = document.getElementById('formContrato');
 const statusDiv = document.getElementById('mensagem-status');
+// =========================================================
+// ✅ ÚLTIMA DECLARAÇÃO — Marca TODOS os checkbox ao clicar
+// =========================================================
+const aceiteFinal = document.getElementById('aceite_final_contrato');
 
+if (aceiteFinal) {
+    aceiteFinal.addEventListener('change', function () {
+        const marcar = this.checked;
+        
+        // Seleciona TODOS os checkbox do formulário
+        const todosCheckbox = form.querySelectorAll('input[type="checkbox"]');
+        
+        todosCheckbox.forEach(checkbox => {
+            // Não altera a própria última declaração (ela controla)
+            if (checkbox.id !== 'aceite_final_contrato') {
+                checkbox.checked = marcar;
+                // Se tiver promoção, mantém regra especial
+                if (checkbox.id === 'chk_pula_pula' || checkbox.id === 'chk_piscina_bolinha') {
+                    const promocao = document.getElementById('chk_promocao');
+                    if (promocao && promocao.checked) {
+                        checkbox.checked = true;
+                        checkbox.disabled = true;
+                    }
+                }
+            }
+        });
+    });
+}
 // =========================================================
 // ✅ PREENCHE E-MAIL DE RESPOSTA E CÓPIA AUTOMATICAMENTE
 // =========================================================
