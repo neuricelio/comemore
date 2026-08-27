@@ -210,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const marcar = this.checked;
 
             // ✅ SELECIONA SOMENTE os checkbox de ACEITE (começam com "aceite_")
-            const aceites = form.querySelectorAll('input[type="checkbox"][id^="aceite_"]');
+            const aceites = form.querySelectorAll('input[type="checkbox"][name^="aceite_"]');
 
             aceites.forEach(checkbox => {
                 // ❌ NÃO marca a própria última declaração
