@@ -306,7 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 // ✅ REDIRECIONA PARA PÁGINA DE SUCESSO COM OS DADOS
                 if (resposta.ok) {
-                    window.location.href = `sucesso.html?id=${resultado.id_contrato}&valor=R$ ${valorTotal}`;
+                    window.open(`sucesso.html?id=${resultado.id_contrato}&valor=R$ ${valorTotal}`, '_blank');
                     return;
                 } else {
                     throw new Error(`Servidor respondeu com erro: ${resposta.status}`);
@@ -326,7 +326,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const valorTotal = (valorMesas + (pula ? 110 : 0) + (bolinha ? 110 : 0) + som - promocao).toFixed(2);
                     const idContrato = Date.now();
 
-                    window.location.href = `sucesso.html?id=${idContrato}&valor=R$ ${valorTotal}`;
+                    window.open(`sucesso.html?id=${idContrato}&valor=R$ ${valorTotal}`, '_blank');
                     return;
                 }
 
