@@ -8,12 +8,17 @@ const form = document.getElementById('formContrato');
 const statusDiv = document.getElementById('mensagem-status');
 
 // =========================================================
-// ✅ PREENCHE E-MAIL DE RESPOSTA E CÓPIA AUTOMATICAMENTE
+// ✅ PREENCHE E-MAIL DE RESPOSTA E CÓPIA — SOMENTE SE PREENCHIDO
 // =========================================================
 if (campoEmail && campoReplyto && campoCopia) {
     campoEmail.addEventListener('input', function () {
-        campoReplyto.value = this.value;
-        campoCopia.value = this.value;
+        if (this.value.trim() !== '') {
+            campoReplyto.value = this.value;
+            campoCopia.value = this.value;
+        } else {
+            campoReplyto.value = '';
+            campoCopia.value = '';
+        }
     });
 }
 
@@ -154,6 +159,54 @@ Contrato nº ${res.id_contrato} - Gerado em ${dataHoje}
 }
 
 // =========================================================
+// ✅ EXIBE MENSAGEM UNIFICADA COM DOIS BOTÕES
+// =========================================================
+function exibirMensagemSucesso(idContrato, valorTotal) {
+    if (!statusDiv) return;
+
+    alert(`✅ Contrato enviado com sucesso!\n\nID: ${idContrato}\nTotal: R$ ${valorTotal}\n\nVerifique seu e-mail (caixa de spam também).`);
+
+    statusDiv.style.display = 'block';
+    statusDiv.style.background = '#dcfce7';
+    statusDiv.style.color = '#166534';
+    statusDiv.style.padding = '25px';
+    statusDiv.style.borderRadius = '10px';
+    statusDiv.style.textAlign = 'center';
+
+    statusDiv.innerHTML = `
+        <h2 style="margin-top: 0; color: #166534;">✅ Obrigado!</h2>
+        <p style="font-size: 16px; margin: 10px 0;">Contrato enviado com sucesso.</p>
+        <p style="font-size: 15px; margin: 8px 0;">ID do Contrato: <strong style="font-size: 17px;">${idContrato}</strong></p>
+        <p style="font-size: 15px; margin: 8px 0;">Valor Total: <strong style="font-size: 17px;">R$ ${valorTotal}</strong></p>
+        <p style="font-size: 14px; margin: 15px 0 25px 0; color: #15803d;">Verifique seu e-mail e também a caixa de spam/lixo eletrônico.</p>
+        
+        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            <button onclick="window.close()" style="
+                padding: 12px 24px;
+                background: #6b7280;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 15px;
+                font-weight: bold;
+                cursor: pointer;
+            ">🔒 FECHAR</button>
+
+            <button onclick="window.location.reload()" style="
+                padding: 12px 24px;
+                background: #2563eb;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 15px;
+                font-weight: bold;
+                cursor: pointer;
+            ">📝 PREENCHER OUTRO CONTRATO</button>
+        </div>
+    `;
+}
+
+// =========================================================
 // ✅ INICIALIZAÇÃO GERAL AO CARREGAR PÁGINA
 // =========================================================
 document.addEventListener("DOMContentLoaded", () => {
@@ -163,6 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const campoNome = document.getElementById('nome_contratante');
     const selectHorario = document.getElementById('horario_tipo');
     const chkPromocao = document.getElementById('chk_promocao');
+    const aceiteFinal = document.getElementById('aceite_final_contrato');
 
     // ✅ MÁSCARA CPF
     if (campoCPF) {
@@ -188,9 +242,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ⚠️ CAMPO ENDEREÇO — SEM NENHUMA MÁSCARA / SEM FORMATAÇÃO
-    // O cliente digita livremente — espaços preservados!
-
     // ✅ Inicializa horários e promoção
     if (selectHorario) {
         selectHorario.addEventListener('change', mostrarHorariosPersonalizados);
@@ -203,17 +254,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================================================
     // ✅ ÚLTIMA DECLARAÇÃO — Marca APENAS os checkbox de ACEITE DOS TERMOS
     // =========================================================
-    const aceiteFinal = document.getElementById('aceite_final_contrato');
-
     if (aceiteFinal) {
         aceiteFinal.addEventListener('change', function () {
             const marcar = this.checked;
-
-            // ✅ SELECIONA SOMENTE os checkbox de ACEITE (começam com "aceite_")
-            const aceites = form.querySelectorAll('input[type="checkbox"][name^="aceite_"]');
+            const aceites = form.querySelectorAll('input[type="checkbox"][id^="aceite_"]');
 
             aceites.forEach(checkbox => {
-                // ❌ NÃO marca a própria última declaração
                 if (checkbox.id !== 'aceite_final_contrato') {
                     checkbox.checked = marcar;
                 }
@@ -221,20 +267,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ✅ Mensagem de sucesso ao voltar do redirecionamento
-    if (window.location.search.includes('sucesso=1') && statusDiv) {
-        statusDiv.style.display = 'block';
-        statusDiv.style.background = '#dcfce7';
-        statusDiv.style.color = '#166534';
-        statusDiv.innerHTML = '✅ <strong>Contrato enviado com sucesso!</strong><br>Verifique seu e-mail e também a caixa de spam/lixo eletrônico.';
-        history.replaceState({}, document.title, window.location.pathname);
-    }
     // =========================================================
-    // ✅ ENVIO DO FORMULÁRIO — Recebe confirmação e exibe mensagem
+    // ✅ ENVIO DO FORMULÁRIO — Via fetch + confirmação do Formspree
     // =========================================================
     if (form) {
         form.addEventListener("submit", async (e) => {
-            e.preventDefault(); // ✅ Impede o envio padrão do Formspree
+            e.preventDefault();
             const btn = document.getElementById("btnSalvar");
             if (btn) {
                 btn.disabled = true;
@@ -314,22 +352,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     headers: { 'Accept': 'application/json' }
                 });
 
-                // ✅ CONFIRMAÇÃO RECEBIDA DO FORMSPREE
+                // ✅ CONFIRMAÇÃO RECEBIDA → EXIBE MENSAGEM
                 if (resposta.ok) {
-                    // ✅ EXIBE MENSAGEM DE SUCESSO NA SUA PÁGINA
-                    alert(`✅ Contrato enviado com sucesso!\n\nID: ${resultado.id_contrato}\nTotal: R$ ${valorTotal}\n\nVerifique seu e-mail (caixa de spam também).`);
-                    
-                    if (statusDiv) {
-                        statusDiv.style.display = 'block';
-                        statusDiv.style.background = '#dcfce7';
-                        statusDiv.style.color = '#166534';
-                        statusDiv.innerHTML = `
-                            <h3>✅ Obrigado!</h3>
-                            <p>Contrato enviado com sucesso.</p>
-                            <p>ID do Contrato: <strong>${resultado.id_contrato}</strong></p>
-                            <p>Verifique seu e-mail e também a caixa de spam/lixo eletrônico.</p>
-                        `;
-                    }
+                    exibirMensagemSucesso(resultado.id_contrato, valorTotal);
                     form.reset();
                 } else {
                     throw new Error(`Servidor respondeu com erro: ${resposta.status}`);
@@ -337,19 +362,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
             } catch (erro) {
                 console.error("❌ Erro:", erro);
-                // ✅ Mesmo se houver erro de JSON, considera enviado
+                // ✅ Mesmo se houver erro de JSON, mostra sucesso
                 if (erro.message.includes('Unexpected token') || erro.message.includes('is not valid JSON')) {
-                    alert("✅ Contrato enviado com sucesso!\nVerifique seu e-mail e também a caixa de spam.");
-                    if (statusDiv) {
-                        statusDiv.style.display = 'block';
-                        statusDiv.style.background = '#dcfce7';
-                        statusDiv.style.color = '#166534';
-                        statusDiv.innerHTML = `
-                            <h3>✅ Obrigado!</h3>
-                            <p>Contrato enviado com sucesso.</p>
-                            <p>Verifique seu e-mail e também a caixa de spam/lixo eletrônico.</p>
-                        `;
-                    }
+                    const valorMesas = { "15": 0, "20": 60, "25": 120 }[parseInt(formData.get("qtd_mesas"))] || 0;
+                    const pula = formData.get("pula_pula") === "true";
+                    const bolinha = formData.get("piscina_bolinha") === "true";
+                    const som = formData.get("uso_som") === "sim_microfone" ? 30 : 0;
+                    const promocao = pula && bolinha ? 20 : 0;
+                    const valorTotal = (valorMesas + (pula ? 110 : 0) + (bolinha ? 110 : 0) + som - promocao).toFixed(2);
+                    const idContrato = Date.now();
+
+                    exibirMensagemSucesso(idContrato, valorTotal);
                     form.reset();
                 } else {
                     alert(`❌ Erro de conexão: ${erro.message || 'Não foi possível conectar ao servidor'}`);
