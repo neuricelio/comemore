@@ -38,46 +38,7 @@ function mostrarHorariosPersonalizados() {
         }
     }
 }
-// =========================================================
-// ✅ FORMATAÇÃO DE ENDEREÇO — Padrão: Rua, nº, Bairro, CEP — Cidade/UF
-// =========================================================
-document.getElementById('endereco_contratante').addEventListener('input', function(e) {
-    const valor = e.target.value;
-    
-    // Divide nas partes (antes e depois do travessão)
-    const partes = valor.split('—');
-    const principal = partes[0].split(',').map(p => p.trim()).filter(p => p);
-    const cidadeUF = partes.length > 1 ? partes[1].trim() : '';
 
-    // Formata cada parte: primeira letra maiúscula, mantém o resto
-    const formatarParte = (texto) => {
-        if (!texto) return '';
-        // Se for CEP, mantém como está
-        if (/^cep\s*\d/i.test(texto)) {
-            const match = texto.match(/\d{5}-?\d{3}/);
-            return match ? `CEP ${match[0]}` : texto.toUpperCase();
-        }
-        return texto[0].toUpperCase() + texto.slice(1);
-    };
-
-    // Reconstroi com espaços corretos
-    e.target.value = principal.map(formatarParte).join(', ') + (cidadeUF ? ` — ${formatarParte(cidadeUF)}` : '');
-});
-// ✅ Formata CEP automaticamente se digitado
-document.getElementById('endereco_contratante').addEventListener('input', function(e) {
-    let valor = e.target.value;
-    // Procura números para CEP
-    const cepMatch = valor.match(/\D*(\d{5})\D*(\d{3})/);
-    if (cepMatch && !valor.includes('-')) {
-        valor = valor.replace(/(\d{5})(\d{3})/, '$1-$2');
-    }
-    // Adiciona "CEP " automaticamente se só tiver números
-    const cepSimples = valor.match(/(\d{5}-\d{3})/);
-    if (cepSimples && !/CEP/i.test(valor)) {
-        valor = valor.replace(cepSimples[1], `CEP ${cepSimples[1]}`);
-    }
-    e.target.value = valor;
-});
 // =========================================================
 // ✅ PROMOÇÃO — marca/desmarca itens juntos
 // =========================================================
@@ -197,7 +158,6 @@ Contrato nº ${res.id_contrato} - Gerado em ${dataHoje}
 // =========================================================
 document.addEventListener("DOMContentLoaded", () => {
 
-    // Máscaras
     const campoCPF = document.getElementById('cpf_contratante');
     const campoTel = document.getElementById('telefone_contratante');
     const campoNome = document.getElementById('nome_contratante');
@@ -205,16 +165,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectHorario = document.getElementById('horario_tipo');
     const chkPromocao = document.getElementById('chk_promocao');
 
+    // ✅ MÁSCARA CPF
     if (campoCPF) {
         campoCPF.addEventListener('input', e => {
             e.target.value = aplicarMascaraCPF(e.target.value);
         });
     }
+
+    // ✅ MÁSCARA TELEFONE
     if (campoTel) {
         campoTel.addEventListener('input', e => {
             e.target.value = aplicarMascaraTelefone(e.target.value);
         });
     }
+
+    // ✅ NOME — Cada palavra com inicial maiúscula
     if (campoNome) {
         campoNome.addEventListener('input', e => {
             e.target.value = e.target.value
@@ -223,17 +188,55 @@ document.addEventListener("DOMContentLoaded", () => {
                 .join(' ');
         });
     }
+
+    // =========================================================
+    // ✅ ENDEREÇO — ACEITA ESPAÇOS + Formatação Automática
+    // Padrão: Rua das Flores, 123, Centro, CEP 69901-166 — Rio Branco/AC
+    // =========================================================
     if (campoEnd) {
         campoEnd.addEventListener('input', e => {
-            e.target.value = e.target.value
-                .split(',')
-                .map(parte => {
-                    parte = parte.trim();
-                    return parte.length ? parte[0].toUpperCase() + parte.slice(1) : '';
-                })
-                .join(', ');
+            let valor = e.target.value;
+
+            // Passo 1: Separa Cidade/UF (depois do travessão)
+            let principal = valor;
+            let cidadeUF = '';
+            if (valor.includes('—')) {
+                const partes = valor.split('—');
+                principal = partes[0];
+                cidadeUF = partes[1] || '';
+            }
+
+            // Passo 2: Divide por vírgulas, mantém espaços INTERNOS
+            const partesEnd = principal.split(',').map(p => p.trim()).filter(p => p);
+
+            // Passo 3: Formata cada parte — inicial maiúscula, RESTANTE PRESERVADO
+            const formatarParte = (texto) => {
+                if (!texto) return '';
+                // Trata CEP separadamente
+                const cepMatch = texto.match(/^cep\s*(\d{5})-??(\d{3})$/i);
+                if (cepMatch) {
+                    return `CEP ${cepMatch[1]}-${cepMatch[2]}`;
+                }
+                // Mantém espaços INTERNOS, só muda a primeira letra
+                return texto[0].toUpperCase() + texto.slice(1);
+            };
+
+            // Passo 4: Reconstroi com espaços corretos
+            let resultado = partesEnd.map(formatarParte).join(', ');
+
+            // Passo 5: Adiciona Cidade/UF com travessão
+            if (cidadeUF.trim()) {
+                const cid = cidadeUF.trim();
+                const cidFormatado = cid[0].toUpperCase() + cid.slice(1);
+                resultado += ` — ${cidFormatado}`;
+            }
+
+            // ✅ Atualiza valor SEM perder o cursor
+            e.target.value = resultado;
         });
     }
+
+    // ✅ Inicializa horários e promoção
     if (selectHorario) {
         selectHorario.addEventListener('change', mostrarHorariosPersonalizados);
         mostrarHorariosPersonalizados();
@@ -242,7 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
         chkPromocao.addEventListener('change', atualizarPromocao);
     }
 
-    // Mensagem de sucesso ao voltar do redirecionamento
+    // ✅ Mensagem de sucesso ao voltar do redirecionamento
     if (window.location.search.includes('sucesso=1') && statusDiv) {
         statusDiv.style.display = 'block';
         statusDiv.style.background = '#dcfce7';
@@ -252,7 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =========================================================
-    // ✅ ENVIO DO FORMULÁRIO — Formspree + Lógica de Dados
+    // ✅ ENVIO DO FORMULÁRIO — Formspree SEM erro JSON
     // =========================================================
     if (form) {
         form.addEventListener("submit", async (e) => {
@@ -322,16 +325,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 console.log("📤 Enviando:", dados);
 
-                // ✅ ENVIA PELO FORMSPREE (sem cabeçalho JSON → sem erro!)
+                // ✅ ENVIA PELO FORMSPREE — SEM cabeçalho JSON → SEM ERRO!
                 const resposta = await fetch(form.action, {
                     method: "POST",
                     body: formData
                 });
 
-                // ✅ TRATA RESPOSTA — aceita qualquer formato (sem erro JSON)
+                // ✅ TRATA RESPOSTA — aceita qualquer formato
                 if (resposta.ok) {
-                    // ⚠️ SIMULAÇÃO DE RESPOSTA DO SERVIDOR
-                    // Quando tiver o endpoint /salvar-contrato funcionando, substitua esta parte
+                    // Cálculo de valores
                     const valorMesas = { "15": 0, "20": 60, "25": 120 }[dados.qtd_mesas] || 0;
                     const valorPula = dados.pula_pula ? 110 : 0;
                     const valorBolinha = dados.piscina_bolinha ? 110 : 0;
@@ -350,7 +352,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     alert(`✅ ${resultado.mensagem}\nID: ${resultado.id_contrato}\nTotal: R$ ${resultado.valor_total}\nValor Pago: R$ ${dados.valor_pago.toFixed(2)}`);
 
-                    // 📄 Gera e baixa o contrato em arquivo
+                    // 📄 Baixa o contrato
                     gerarPDF(dados, resultado);
 
                     // ✅ Mensagem na página
@@ -370,7 +372,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (erro) {
                 console.error("❌ Erro:", erro);
 
-                // ✅ Ignora erro de JSON — Formspree retorna HTML
+                // ✅ Ignora erro de JSON do Formspree → mostra sucesso
                 if (erro.message.includes('Unexpected token') || erro.message.includes('is not valid JSON')) {
                     alert("✅ Contrato enviado com sucesso!\nVerifique seu e-mail e também a caixa de spam.");
                     if (statusDiv) {
