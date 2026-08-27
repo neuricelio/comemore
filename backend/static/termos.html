@@ -8,7 +8,7 @@ const form = document.getElementById('formContrato');
 const statusDiv = document.getElementById('mensagem-status');
 
 // =========================================================
-// ✅ PREENCHE E-MAIL DE RESPOSTA E CÓPIA AUTOMATICAMENTE
+// ✅ E-MAIL DE RESPOSTA AUTOMÁTICA
 // =========================================================
 if (campoEmail && campoReplyto && campoCopia) {
     campoEmail.addEventListener('input', function () {
@@ -40,7 +40,7 @@ function mostrarHorariosPersonalizados() {
 }
 
 // =========================================================
-// ✅ PROMOÇÃO — marca/desmarca itens juntos
+// ✅ PROMOÇÃO
 // =========================================================
 function atualizarPromocao() {
     const promocao = document.getElementById('chk_promocao');
@@ -63,7 +63,7 @@ function atualizarPromocao() {
 }
 
 // =========================================================
-// ✅ MÁSCARA PARA CPF — 000.000.000-00
+// ✅ MÁSCARA CPF
 // =========================================================
 function aplicarMascaraCPF(valor) {
     valor = valor.replace(/\D/g, '');
@@ -74,7 +74,7 @@ function aplicarMascaraCPF(valor) {
 }
 
 // =========================================================
-// ✅ MÁSCARA PARA TELEFONE — (00) 00000-0000
+// ✅ MÁSCARA TELEFONE
 // =========================================================
 function aplicarMascaraTelefone(valor) {
     valor = valor.replace(/\D/g, '');
@@ -84,7 +84,7 @@ function aplicarMascaraTelefone(valor) {
 }
 
 // =========================================================
-// ✅ CONVERSÃO DE DATA ISO → BR
+// ✅ CONVERSÃO DE DATA
 // =========================================================
 function converterData(dataIso) {
     if (!dataIso) return "";
@@ -93,7 +93,7 @@ function converterData(dataIso) {
 }
 
 // =========================================================
-// ✅ GERA ARQUIVO DE CONTRATO (.txt)
+// ✅ GERA CONTRATO .txt
 // =========================================================
 function gerarPDF(dados, res) {
     const dataHoje = new Date().toLocaleDateString('pt-BR');
@@ -154,7 +154,7 @@ Contrato nº ${res.id_contrato} - Gerado em ${dataHoje}
 }
 
 // =========================================================
-// ✅ INICIALIZAÇÃO GERAL AO CARREGAR PÁGINA
+// ✅ INICIALIZAÇÃO
 // =========================================================
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -164,21 +164,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectHorario = document.getElementById('horario_tipo');
     const chkPromocao = document.getElementById('chk_promocao');
 
-    // ✅ MÁSCARA CPF
+    // ✅ CPF
     if (campoCPF) {
         campoCPF.addEventListener('input', e => {
             e.target.value = aplicarMascaraCPF(e.target.value);
         });
     }
 
-    // ✅ MÁSCARA TELEFONE
+    // ✅ TELEFONE
     if (campoTel) {
         campoTel.addEventListener('input', e => {
             e.target.value = aplicarMascaraTelefone(e.target.value);
         });
     }
 
-    // ✅ NOME — Cada palavra com inicial maiúscula
+    // ✅ NOME — iniciais maiúsculas
     if (campoNome) {
         campoNome.addEventListener('input', e => {
             e.target.value = e.target.value
@@ -188,11 +188,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // =========================================================
-    // ✅ ENDEREÇO — SEM MÁSCARA / SEM FORMATAÇÃO
-    // O cliente digita livremente, sem nenhuma alteração
-    // =========================================================
-    // ✅ CÓDIGO REMOVIDO: NÃO HÁ MAIS NENHUMA FORMATAÇÃO NO ENDEREÇO
+    // ⚠️ O CAMPO DE ENDEREÇO — SEM NENHUMA REGRA! SEM NENHUMA MÁSCARA!
+    // NÃO EXISTE CÓDIGO ALTERANDO O ENDEREÇO — VOCÊ DIGITA LIVREMENTE!
 
     // ✅ Inicializa horários e promoção
     if (selectHorario) {
@@ -203,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
         chkPromocao.addEventListener('change', atualizarPromocao);
     }
 
-    // ✅ Mensagem de sucesso ao voltar do redirecionamento
+    // ✅ Mensagem de sucesso
     if (window.location.search.includes('sucesso=1') && statusDiv) {
         statusDiv.style.display = 'block';
         statusDiv.style.background = '#dcfce7';
@@ -213,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =========================================================
-    // ✅ ENVIO DO FORMULÁRIO — Formspree SEM erro JSON
+    // ✅ ENVIO DO FORMULÁRIO
     // =========================================================
     if (form) {
         form.addEventListener("submit", async (e) => {
@@ -227,7 +224,6 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 const formData = new FormData(form);
 
-                // ✅ Define horário com base na opção escolhida
                 let horario_inicio, horario_termino;
                 const tipo_horario = formData.get("horario_tipo");
                 if (tipo_horario === 'dia') {
@@ -244,14 +240,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     horario_termino = formData.get("horario_termino");
                 }
 
-                // ✅ Validação de horários
                 if (!horario_inicio || !horario_termino) {
                     alert("⚠️ Preencha os horários de início e término!");
                     if (btn) { btn.disabled = false; btn.textContent = "✅ Salvar e Enviar Contrato"; }
                     return;
                 }
 
-                // ✅ Dados do formulário
                 const dados = {
                     nome_contratante: formData.get("nome_contratante"),
                     cpf_contratante: formData.get("cpf_contratante"),
@@ -281,17 +275,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     aceite_final_contrato: true
                 };
 
-                console.log("📤 Enviando:", dados);
-
-                // ✅ ENVIA PELO FORMSPREE — SEM cabeçalho JSON → SEM ERRO!
                 const resposta = await fetch(form.action, {
                     method: "POST",
                     body: formData
                 });
 
-                // ✅ TRATA RESPOSTA — aceita qualquer formato
                 if (resposta.ok) {
-                    // Cálculo de valores
                     const valorMesas = { "15": 0, "20": 60, "25": 120 }[dados.qtd_mesas] || 0;
                     const valorPula = dados.pula_pula ? 110 : 0;
                     const valorBolinha = dados.piscina_bolinha ? 110 : 0;
@@ -306,31 +295,19 @@ document.addEventListener("DOMContentLoaded", () => {
                         valor_total: valorTotal
                     };
 
-                    console.log("📥 Resposta:", resultado);
-
                     alert(`✅ ${resultado.mensagem}\nID: ${resultado.id_contrato}\nTotal: R$ ${resultado.valor_total}\nValor Pago: R$ ${dados.valor_pago.toFixed(2)}`);
-
-                    // 📄 Baixa o contrato
                     gerarPDF(dados, resultado);
-
-                    // ✅ Mensagem na página
                     if (statusDiv) {
                         statusDiv.style.display = 'block';
                         statusDiv.style.background = '#dcfce7';
                         statusDiv.style.color = '#166534';
                         statusDiv.innerHTML = '✅ <strong>Contrato enviado com sucesso!</strong><br>Verifique seu e-mail e também a caixa de spam/lixo eletrônico.';
                     }
-
                     form.reset();
-
                 } else {
                     throw new Error(`Servidor respondeu com erro: ${resposta.status}`);
                 }
-
             } catch (erro) {
-                console.error("❌ Erro:", erro);
-
-                // ✅ Ignora erro de JSON do Formspree → mostra sucesso
                 if (erro.message.includes('Unexpected token') || erro.message.includes('is not valid JSON')) {
                     alert("✅ Contrato enviado com sucesso!\nVerifique seu e-mail e também a caixa de spam.");
                     if (statusDiv) {
