@@ -8,7 +8,7 @@ const form = document.getElementById('formContrato');
 const statusDiv = document.getElementById('mensagem-status');
 
 // =========================================================
-// ✅ E-MAIL DE RESPOSTA AUTOMÁTICA
+// ✅ E-MAIL DE RESPOSTA E CÓPIA AUTOMÁTICA
 // =========================================================
 if (campoEmail && campoReplyto && campoCopia) {
     campoEmail.addEventListener('input', function () {
@@ -40,7 +40,7 @@ function mostrarHorariosPersonalizados() {
 }
 
 // =========================================================
-// ✅ PROMOÇÃO
+// ✅ PROMOÇÃO — marca/desmarca itens juntos
 // =========================================================
 function atualizarPromocao() {
     const promocao = document.getElementById('chk_promocao');
@@ -84,7 +84,7 @@ function aplicarMascaraTelefone(valor) {
 }
 
 // =========================================================
-// ✅ CONVERSÃO DE DATA
+// ✅ CONVERSÃO DE DATA ISO → BR
 // =========================================================
 function converterData(dataIso) {
     if (!dataIso) return "";
@@ -93,7 +93,7 @@ function converterData(dataIso) {
 }
 
 // =========================================================
-// ✅ GERA CONTRATO .txt
+// ✅ GERA ARQUIVO DE CONTRATO (.txt)
 // =========================================================
 function gerarPDF(dados, res) {
     const dataHoje = new Date().toLocaleDateString('pt-BR');
@@ -154,7 +154,7 @@ Contrato nº ${res.id_contrato} - Gerado em ${dataHoje}
 }
 
 // =========================================================
-// ✅ INICIALIZAÇÃO
+// ✅ INICIALIZAÇÃO GERAL AO CARREGAR PÁGINA
 // =========================================================
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -164,21 +164,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectHorario = document.getElementById('horario_tipo');
     const chkPromocao = document.getElementById('chk_promocao');
 
-    // ✅ CPF
+    // ✅ MÁSCARA CPF
     if (campoCPF) {
         campoCPF.addEventListener('input', e => {
             e.target.value = aplicarMascaraCPF(e.target.value);
         });
     }
 
-    // ✅ TELEFONE
+    // ✅ MÁSCARA TELEFONE
     if (campoTel) {
         campoTel.addEventListener('input', e => {
             e.target.value = aplicarMascaraTelefone(e.target.value);
         });
     }
 
-    // ✅ NOME — iniciais maiúsculas
+    // ✅ NOME — Cada palavra com inicial maiúscula
     if (campoNome) {
         campoNome.addEventListener('input', e => {
             e.target.value = e.target.value
@@ -188,8 +188,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ⚠️ O CAMPO DE ENDEREÇO — SEM NENHUMA REGRA! SEM NENHUMA MÁSCARA!
-    // NÃO EXISTE CÓDIGO ALTERANDO O ENDEREÇO — VOCÊ DIGITA LIVREMENTE!
+    // ⚠️ CAMPO ENDEREÇO — SEM NENHUMA MÁSCARA, SEM NENHUMA FORMATAÇÃO
+    // NÃO EXISTE CÓDIGO ALTERANDO ESTE CAMPO — É UM INPUT NORMAL!
 
     // ✅ Inicializa horários e promoção
     if (selectHorario) {
@@ -200,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
         chkPromocao.addEventListener('change', atualizarPromocao);
     }
 
-    // ✅ Mensagem de sucesso
+    // ✅ Mensagem de sucesso ao voltar do redirecionamento
     if (window.location.search.includes('sucesso=1') && statusDiv) {
         statusDiv.style.display = 'block';
         statusDiv.style.background = '#dcfce7';
@@ -224,6 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 const formData = new FormData(form);
 
+                // ✅ Define horário com base na opção escolhida
                 let horario_inicio, horario_termino;
                 const tipo_horario = formData.get("horario_tipo");
                 if (tipo_horario === 'dia') {
@@ -236,16 +237,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     horario_inicio = "17:00";
                     horario_termino = "02:00";
                 } else {
-                    horario_inicio = formData.get("horario_inicio");
-                    horario_termino = formData.get("horario_termino");
+                    horario_inicio = formData.get("horario_inicio_personalizado");
+                    horario_termino = formData.get("horario_termino_personalizado");
                 }
 
+                // ✅ Validação de horários
                 if (!horario_inicio || !horario_termino) {
                     alert("⚠️ Preencha os horários de início e término!");
                     if (btn) { btn.disabled = false; btn.textContent = "✅ Salvar e Enviar Contrato"; }
                     return;
                 }
 
+                // ✅ Reúne todos os dados do formulário
                 const dados = {
                     nome_contratante: formData.get("nome_contratante"),
                     cpf_contratante: formData.get("cpf_contratante"),
@@ -275,12 +278,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     aceite_final_contrato: true
                 };
 
+                // ✅ ENVIA para o Formspree
                 const resposta = await fetch(form.action, {
                     method: "POST",
                     body: formData
                 });
 
                 if (resposta.ok) {
+                    // ✅ Cálculo de valores
                     const valorMesas = { "15": 0, "20": 60, "25": 120 }[dados.qtd_mesas] || 0;
                     const valorPula = dados.pula_pula ? 110 : 0;
                     const valorBolinha = dados.piscina_bolinha ? 110 : 0;
@@ -296,18 +301,28 @@ document.addEventListener("DOMContentLoaded", () => {
                     };
 
                     alert(`✅ ${resultado.mensagem}\nID: ${resultado.id_contrato}\nTotal: R$ ${resultado.valor_total}\nValor Pago: R$ ${dados.valor_pago.toFixed(2)}`);
+
+                    // 📄 Baixa o contrato
                     gerarPDF(dados, resultado);
+
+                    // ✅ Mensagem na página
                     if (statusDiv) {
                         statusDiv.style.display = 'block';
                         statusDiv.style.background = '#dcfce7';
                         statusDiv.style.color = '#166534';
                         statusDiv.innerHTML = '✅ <strong>Contrato enviado com sucesso!</strong><br>Verifique seu e-mail e também a caixa de spam/lixo eletrônico.';
                     }
+
                     form.reset();
+
                 } else {
                     throw new Error(`Servidor respondeu com erro: ${resposta.status}`);
                 }
+
             } catch (erro) {
+                console.error("❌ Erro:", erro);
+
+                // ✅ Ignora erro de JSON do Formspree → mostra sucesso
                 if (erro.message.includes('Unexpected token') || erro.message.includes('is not valid JSON')) {
                     alert("✅ Contrato enviado com sucesso!\nVerifique seu e-mail e também a caixa de spam.");
                     if (statusDiv) {
