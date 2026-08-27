@@ -109,12 +109,7 @@
         // ✅ BOTÃO FECHAR — Tenta fechar, se não conseguir, volta para página inicial
         document.getElementById('btnFechar').addEventListener('click', function () {
             // Tenta fechar a guia
-            window.open('', '_self').close();
-            
-            // Se não fechar (navegador bloqueou), redireciona para página inicial
-            setTimeout(() => {
-                window.location.href = 'contrato.html';
-            }, 300);
+            window.open('', '_self').close();            
         });
     </script>
 
