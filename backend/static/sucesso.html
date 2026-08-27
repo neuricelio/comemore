@@ -92,7 +92,7 @@
         <p class="aviso">Verifique seu e-mail e também a caixa de spam/lixo eletrônico.</p>
 
         <div class="botoes">
-            <button class="btn-fechar" onclick="window.close()">🔒 FECHAR</button>
+            <button class="btn-fechar" id="btnFechar">🔒 FECHAR</button>
             <button class="btn-novo" onclick="window.location.href='contrato.html'">📋 PREENCHER OUTRO CONTRATO</button>
         </div>
     </div>
@@ -105,6 +105,17 @@
 
         document.getElementById('idContrato').textContent = id;
         document.getElementById('valorTotal').textContent = valor;
+
+        // ✅ BOTÃO FECHAR — Tenta fechar, se não conseguir, volta para página inicial
+        document.getElementById('btnFechar').addEventListener('click', function () {
+            // Tenta fechar a guia
+            window.open('', '_self').close();
+            
+            // Se não fechar (navegador bloqueou), redireciona para página inicial
+            setTimeout(() => {
+                window.location.href = 'contrato.html';
+            }, 300);
+        });
     </script>
 
 </body>
