@@ -27,8 +27,6 @@
             <h1>Contrato de Locação de Espaço para Eventos</h1>
             <p><strong>BUFFET ESPAÇO COMEMORE FESTAS E EVENTOS</strong><br>
             Telefone: (68) 99921-7686 | Rua Isaura Parente, nº 100 — Rio Branco/AC</p>
-            <label>E-mail (para receber o contrato):</label>
-            <input type="email" name="email_contratante" id="email_contratante" placeholder="seu@email.com" required>
         </div>
 
         <div class="secao">
@@ -51,9 +49,13 @@
 
                 <label>Endereço Completo: <b><i>Nome da rua, nº, Bairro, CEP — Cidade/UF</i></b></label>
                 <input type="text" name="endereco_contratante" id="endereco_contratante" placeholder="Nome da rua, nº, Bairro, CEP — Cidade/UF" required autocomplete="street-address">
-                
+
                 <label>Telefone / WhatsApp:</label>
                 <input type="text" name="telefone_contratante" id="telefone_contratante" placeholder="(68) 99999-9999" required>
+
+                <label>E-mail (para receber o contrato):</label>
+                <input type="email" name="email_contratante" id="email_contratante" placeholder="seu@email.com">
+                <small style="color: #b45309; font-size: 0.9em;">⚠️ Se não preenchido, o contrato não será enviado para o seu e-mail.</small>
             </div>
         </div>
 
@@ -170,8 +172,8 @@
                 <label><input type="checkbox" name="aceite_cancelamento" required> Concordo com as regras de cancelamento e alteração de data</label>
                 <label><input type="checkbox" name="aceite_gerais" required> Li e concordo com as informações gerais do contrato</label>
                 <label>
-                  <input type="checkbox" id="aceite_final_contrato" name="aceite_final_contrato" required>
-                  <strong>Declaro que li, conferi e concordo com TODOS os termos e declarações acima.</strong>
+                    <input type="checkbox" id="aceite_final_contrato" name="aceite_final_contrato" required>
+                    <strong>Declaro que li, conferi e concordo com TODOS os termos e declarações acima.</strong>
                 </label>
             </div>
         </div>
