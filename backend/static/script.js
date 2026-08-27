@@ -194,8 +194,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // Padrão: Rua das Flores, 123, Centro, CEP 69901-166 — Rio Branco/AC
     // =========================================================
     if (campoEnd) {
+        let ignorarProximoInput = false;
+
         campoEnd.addEventListener('input', e => {
-            let valor = e.target.value;
+            if (ignorarProximoInput) return;
+
+            const cursorPos = e.target.selectionStart;
+            const valorOriginal = e.target.value;
+
+            // ✅ PRESERVA TUDO — só ajusta formatação, NÃO REMOVE ESPAÇOS
+            let valor = valorOriginal;
 
             // Passo 1: Separa Cidade/UF (depois do travessão)
             let principal = valor;
@@ -206,36 +214,44 @@ document.addEventListener("DOMContentLoaded", () => {
                 cidadeUF = partes[1] || '';
             }
 
-            // Passo 2: Divide por vírgulas, mantém espaços INTERNOS
-            const partesEnd = principal.split(',').map(p => p.trim()).filter(p => p);
+            // Passo 2: Divide por vírgulas — PRESERVA espaços INTERNOS
+            const partes = principal.split(',').map(p => {
+                // Apenas remove espaços EXCEDENTES nas BORDAS, mantém internos
+                return p.trim();
+            }).filter(p => p.length > 0);
 
-            // Passo 3: Formata cada parte — inicial maiúscula, RESTANTE PRESERVADO
+            // Passo 3: Primeira letra MAIÚSCULA, RESTANTE EXATAMENTE COMO DIGITADO
             const formatarParte = (texto) => {
                 if (!texto) return '';
-                // Trata CEP separadamente
-                const cepMatch = texto.match(/^cep\s*(\d{5})-??(\d{3})$/i);
+                // Trata CEP especial
+                const cepMatch = texto.match(/^cep\s*(\d{5})-?(\d{3})$/i);
                 if (cepMatch) {
                     return `CEP ${cepMatch[1]}-${cepMatch[2]}`;
                 }
-                // Mantém espaços INTERNOS, só muda a primeira letra
+                // ✅ Só muda a PRIMEIRA letra — o resto fica IGUAL (inclui espaços!)
                 return texto[0].toUpperCase() + texto.slice(1);
             };
 
-            // Passo 4: Reconstroi com espaços corretos
-            let resultado = partesEnd.map(formatarParte).join(', ');
+            // Passo 4: Reconstroi com ", " e " — "
+            let resultado = partes.map(formatarParte).join(', ');
 
-            // Passo 5: Adiciona Cidade/UF com travessão
+            // Passo 5: Adiciona Cidade/UF
             if (cidadeUF.trim()) {
                 const cid = cidadeUF.trim();
-                const cidFormatado = cid[0].toUpperCase() + cid.slice(1);
-                resultado += ` — ${cidFormatado}`;
+                resultado += ` — ${cid[0].toUpperCase() + cid.slice(1)}`;
             }
 
-            // ✅ Atualiza valor SEM perder o cursor
-            e.target.value = resultado;
+            // ✅ Só atualiza se mudou — evita loop e preserva cursor
+            if (resultado !== valorOriginal) {
+                ignorarProximoInput = true;
+                e.target.value = resultado;
+                // Reposiciona o cursor corretamente
+                const novaPos = Math.min(cursorPos + (resultado.length - valorOriginal.length), resultado.length);
+                e.target.selectionStart = e.target.selectionEnd = novaPos;
+                setTimeout(() => { ignorarProximoInput = false; }, 0);
+            }
         });
     }
-
     // ✅ Inicializa horários e promoção
     if (selectHorario) {
         selectHorario.addEventListener('change', mostrarHorariosPersonalizados);
