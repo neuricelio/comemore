@@ -68,7 +68,7 @@
     <script>
         const parametros = new URLSearchParams(window.location.search);
         document.getElementById('idContrato').textContent = parametros.get('id') || '---';
-        document.getElementById('valorTotal').textContent = parametros.get('valor') || 'R$ 0,00';
+        //document.getElementById('valorTotal').textContent = parametros.get('valor') || 'R$ 0,00';
 
         // ✅ Botão Fechar — Método garantido
         document.getElementById('btnFechar').addEventListener('click', function () {
