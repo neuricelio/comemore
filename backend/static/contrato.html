@@ -16,7 +16,7 @@
         
         <!-- ✅ Assunto do e-mail -->
         <input type="hidden" name="_subject" value="Novo Contrato de Locação — Espaço Comemore">
-
+        
         <!-- ✅ REDIRECIONAMENTO — evita página HTML do Formspree -->
         <input type="hidden" name="_redirect" value="https://espaco-comemore.onrender.com/contrato.html?sucesso=1">
 
@@ -72,10 +72,13 @@
                     <option value="Festa CONFRATERNIZAÇÃO FAMILIAR">Confraternização</option>
                     <option value="Outro">Outro</option>
                 </select>
+
                 <label>Observações (opcional):</label>
                 <textarea name="observacao_evento" rows="2"></textarea>
+
                 <label>Data do Evento:</label>
                 <input type="date" name="data_evento" id="data_evento" required>
+
                 <label>Horários:</label>
                 <select name="horario_tipo" id="horario_tipo" required>
                     <option value="">Selecione...</option>
@@ -84,32 +87,38 @@
                     <option value="noite_sabado">NOITE — das 17:00 às 02:00 (sábado - aniversário adulto)</option>
                     <option value="outros">Outros (especificar abaixo)</option>
                 </select>
+
                 <div id="horarios_personalizados" style="display: none; padding-left: 15px; border-left: 3px solid #2563eb; margin: 8px 0;">
                     <label>Horário de Início:</label>
                     <input type="time" name="horario_inicio" id="horario_inicio_personalizado">
                     <label>Horário de Término:</label>
                     <input type="time" name="horario_termino" id="horario_termino_personalizado">
                 </div>
+
                 <label>Quantidade de Mesas:</label>
                 <select name="qtd_mesas">
                     <option value="15">15 mesas (incluso)</option>
                     <option value="20">20 mesas (+ R$ 60,00)</option>
                     <option value="25">25 mesas (+ R$ 120,00)</option>
                 </select>
+
                 <label>Uso da Piscina:</label>
                 <select name="uso_piscina">
                     <option value="sim">Com uso da piscina</option>
                     <option value="sem_uso">Sem uso durante o evento</option>
                     <option value="nao">Piscina fechada/com capa</option>
                 </select>
+
                 <label>Sistema de Som:</label>
                 <select name="uso_som">
                     <option value="nao">Não utilizar</option>
                     <option value="sim">Utilizar sem microfone</option>
                     <option value="sim_microfone">Utilizar com microfone (+ R$ 30,00)</option>
                 </select>
+
                 <label>Horário de Entrega das Bebidas:</label>
                 <input type="time" name="horario_entrega_bebidas" required>
+
                 <label>Horário de Entrega do Espaço (Decoração):</label>
                 <input type="time" name="horario_recebimento_espaco" required>
 
@@ -142,6 +151,7 @@
                     <option value="dinheiro">Dinheiro</option>
                     <option value="transferencia">Transferência Bancária</option>
                 </select>
+
                 <label>Valor Pago (R$):</label>
                 <input type="number" step="0.01" min="0" name="valor_pago" id="valor_pago" placeholder="0,00" required>
             </div>
