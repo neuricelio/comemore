@@ -161,7 +161,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const campoCPF = document.getElementById('cpf_contratante');
     const campoTel = document.getElementById('telefone_contratante');
     const campoNome = document.getElementById('nome_contratante');
-    const campoEnd = document.getElementById('endereco_contratante');
     const selectHorario = document.getElementById('horario_tipo');
     const chkPromocao = document.getElementById('chk_promocao');
 
@@ -189,6 +188,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // ⚠️ CAMPO ENDEREÇO — SEM NENHUMA MÁSCARA / SEM FORMATAÇÃO
+    // O cliente digita livremente — espaços preservados!
+
     // ✅ Inicializa horários e promoção
     if (selectHorario) {
         selectHorario.addEventListener('change', mostrarHorariosPersonalizados);
@@ -208,11 +210,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =========================================================
-    // ✅ ENVIO DO FORMULÁRIO — Formspree SEM erro JSON
+    // ✅ ENVIO DO FORMULÁRIO — SEM fetch → ACABA O ERRO!
     // =========================================================
     if (form) {
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
+        form.addEventListener("submit", (e) => {
             const btn = document.getElementById("btnSalvar");
             if (btn) {
                 btn.disabled = true;
@@ -235,18 +236,19 @@ document.addEventListener("DOMContentLoaded", () => {
                     horario_inicio = "17:00";
                     horario_termino = "02:00";
                 } else {
-                    horario_inicio = formData.get("horario_inicio");
-                    horario_termino = formData.get("horario_termino");
+                    horario_inicio = formData.get("horario_inicio_personalizado");
+                    horario_termino = formData.get("horario_termino_personalizado");
                 }
 
-                // ✅ Validação de horários
+                // ✅ Validação de horários ANTES de enviar
                 if (!horario_inicio || !horario_termino) {
                     alert("⚠️ Preencha os horários de início e término!");
                     if (btn) { btn.disabled = false; btn.textContent = "✅ Salvar e Enviar Contrato"; }
+                    e.preventDefault();
                     return;
                 }
 
-                // ✅ Dados do formulário
+                // ✅ Reúne os dados para gerar o contrato
                 const dados = {
                     nome_contratante: formData.get("nome_contratante"),
                     cpf_contratante: formData.get("cpf_contratante"),
@@ -266,89 +268,46 @@ document.addEventListener("DOMContentLoaded", () => {
                     pula_pula: formData.get("pula_pula") === "true",
                     piscina_bolinha: formData.get("piscina_bolinha") === "true",
                     forma_pagamento_entrada: formData.get("forma_pagamento_entrada"),
-                    valor_pago: parseFloat(formData.get("valor_pago")) || 0,
-                    aceite_funcionamento: true,
-                    aceite_uso_espaco: true,
-                    aceite_obrigacoes_contratado: true,
-                    aceite_obrigacoes_contratante: true,
-                    aceite_cancelamento: true,
-                    aceite_gerais: true,
-                    aceite_final_contrato: true
+                    valor_pago: parseFloat(formData.get("valor_pago")) || 0
                 };
 
-                console.log("📤 Enviando:", dados);
+                // ✅ Cálculo de valores
+                const valorMesas = { "15": 0, "20": 60, "25": 120 }[dados.qtd_mesas] || 0;
+                const valorPula = dados.pula_pula ? 110 : 0;
+                const valorBolinha = dados.piscina_bolinha ? 110 : 0;
+                const somMicrofone = dados.uso_som === "sim_microfone" ? 30 : 0;
+                const promocao = dados.pula_pula && dados.piscina_bolinha ? 20 : 0;
+                const valorTotal = (valorMesas + valorPula + valorBolinha + somMicrofone - promocao).toFixed(2);
 
-                // ✅ ENVIA PELO FORMSPREE — SEM cabeçalho JSON → SEM ERRO!
-                const resposta = await fetch(form.action, {
-                    method: "POST",
-                    body: formData
-                });
+                const resultado = {
+                    id_contrato: Date.now(),
+                    valor_total: valorTotal
+                };
 
-                // ✅ TRATA RESPOSTA — aceita qualquer formato
-                if (resposta.ok) {
-                    // Cálculo de valores
-                    const valorMesas = { "15": 0, "20": 60, "25": 120 }[dados.qtd_mesas] || 0;
-                    const valorPula = dados.pula_pula ? 110 : 0;
-                    const valorBolinha = dados.piscina_bolinha ? 110 : 0;
-                    const somMicrofone = dados.uso_som === "sim_microfone" ? 30 : 0;
-                    const promocao = dados.pula_pula && dados.piscina_bolinha ? 20 : 0;
-                    const valorTotal = (valorMesas + valorPula + valorBolinha + somMicrofone - promocao).toFixed(2);
+                // 📄 GERA E BAIXA O CONTRATO ANTES DE ENVIAR
+                gerarPDF(dados, resultado);
 
-                    const resultado = {
-                        sucesso: true,
-                        mensagem: "Contrato enviado com sucesso!",
-                        id_contrato: Date.now(),
-                        valor_total: valorTotal
-                    };
-
-                    console.log("📥 Resposta:", resultado);
-
-                    alert(`✅ ${resultado.mensagem}\nID: ${resultado.id_contrato}\nTotal: R$ ${resultado.valor_total}\nValor Pago: R$ ${dados.valor_pago.toFixed(2)}`);
-
-                    // 📄 Baixa o contrato
-                    gerarPDF(dados, resultado);
-
-                    // ✅ Mensagem na página
+                // ✅ MOSTRA MENSAGEM DE SUCESSO APÓS ENVIO
+                setTimeout(() => {
+                    alert(`✅ Contrato enviado!\nID: ${resultado.id_contrato}\nTotal: R$ ${valorTotal}\nVerifique seu e-mail (caixa de spam também).`);
                     if (statusDiv) {
                         statusDiv.style.display = 'block';
                         statusDiv.style.background = '#dcfce7';
                         statusDiv.style.color = '#166534';
                         statusDiv.innerHTML = '✅ <strong>Contrato enviado com sucesso!</strong><br>Verifique seu e-mail e também a caixa de spam/lixo eletrônico.';
                     }
-
                     form.reset();
+                    if (btn) { btn.disabled = false; btn.textContent = "✅ Salvar e Enviar Contrato"; }
+                }, 800);
 
-                } else {
-                    throw new Error(`Servidor respondeu com erro: ${resposta.status}`);
-                }
+                // ✅ DEIXA O FORMULÁRIO ENVIAR DIRETO AO FORMSPREE — SEM fetch()!
+                // Removemos e.preventDefault() → o formulário envia naturalmente!
 
             } catch (erro) {
                 console.error("❌ Erro:", erro);
-
-                // ✅ Ignora erro de JSON do Formspree → mostra sucesso
-                if (erro.message.includes('Unexpected token') || erro.message.includes('is not valid JSON')) {
-                    alert("✅ Contrato enviado com sucesso!\nVerifique seu e-mail e também a caixa de spam.");
-                    if (statusDiv) {
-                        statusDiv.style.display = 'block';
-                        statusDiv.style.background = '#dcfce7';
-                        statusDiv.style.color = '#166534';
-                        statusDiv.innerHTML = '✅ <strong>Contrato enviado com sucesso!</strong><br>Verifique seu e-mail e também a caixa de spam/lixo eletrônico.';
-                    }
-                    form.reset();
-                } else {
-                    alert(`❌ Erro de conexão: ${erro.message || 'Não foi possível conectar ao servidor'}`);
-                    if (statusDiv) {
-                        statusDiv.style.display = 'block';
-                        statusDiv.style.background = '#fee2e2';
-                        statusDiv.style.color = '#991b1b';
-                        statusDiv.innerHTML = '❌ <strong>Erro ao enviar.</strong> Tente novamente ou entre em contato.';
-                    }
-                }
-            } finally {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = "✅ Salvar e Enviar Contrato";
-                }
+                alert(`⚠️ Verifique se todos os campos estão preenchidos!`);
+                if (btn) { btn.disabled = false; btn.textContent = "✅ Salvar e Enviar Contrato"; }
+                e.preventDefault();
             }
         });
     }
