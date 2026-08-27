@@ -8,7 +8,25 @@ const form = document.getElementById('formContrato');
 const statusDiv = document.getElementById('mensagem-status');
 
 // =========================================================
-// ✅ PREENCHE E-MAIL DE RESPOSTA E CÓPIA — SOMENTE SE PREENCHIDO
+// ✅ FUNÇÃO UNIFICADA — CALCULA VALOR TOTAL (USADA EM TODO O CÓDIGO)
+// =========================================================
+function calcularValorTotal(formData) {
+    const qtdMesas = parseInt(formData.get("qtd_mesas"));
+    const pula = formData.get("pula_pula") === "true";
+    const bolinha = formData.get("piscina_bolinha") === "true";
+    const usoSom = formData.get("uso_som");
+
+    const valorMesas = { "15": 0, "20": 60, "25": 120 }[qtdMesas] || 0;
+    const valorPula = pula ? 110 : 0;
+    const valorBolinha = bolinha ? 110 : 0;
+    const somMicrofone = usoSom === "sim_microfone" ? 30 : 0;
+    const promocao = pula && bolinha ? 20 : 0;
+
+    return (valorMesas + valorPula + valorBolinha + somMicrofone - promocao).toFixed(2);
+}
+
+// =========================================================
+// ✅ PREENCHE E-MAIL DE RESPOSTA E CÓPIA
 // =========================================================
 if (campoEmail && campoReplyto && campoCopia) {
     campoEmail.addEventListener('input', function () {
@@ -68,7 +86,7 @@ function atualizarPromocao() {
 }
 
 // =========================================================
-// ✅ MÁSCARA PARA CPF — 000.000.000-00
+// ✅ MÁSCARA CPF
 // =========================================================
 function aplicarMascaraCPF(valor) {
     valor = valor.replace(/\D/g, '');
@@ -79,7 +97,7 @@ function aplicarMascaraCPF(valor) {
 }
 
 // =========================================================
-// ✅ MÁSCARA PARA TELEFONE — (00) 00000-0000
+// ✅ MÁSCARA TELEFONE
 // =========================================================
 function aplicarMascaraTelefone(valor) {
     valor = valor.replace(/\D/g, '');
@@ -89,7 +107,7 @@ function aplicarMascaraTelefone(valor) {
 }
 
 // =========================================================
-// ✅ CONVERSÃO DE DATA ISO → BR
+// ✅ CONVERSÃO DE DATA
 // =========================================================
 function converterData(dataIso) {
     if (!dataIso) return "";
@@ -98,7 +116,7 @@ function converterData(dataIso) {
 }
 
 // =========================================================
-// ✅ GERA ARQUIVO DE CONTRATO (.txt)
+// ✅ GERA ARQUIVO DE CONTRATO
 // =========================================================
 function gerarPDF(dados, res) {
     const dataHoje = new Date().toLocaleDateString('pt-BR');
@@ -159,7 +177,7 @@ Contrato nº ${res.id_contrato} - Gerado em ${dataHoje}
 }
 
 // =========================================================
-// ✅ INICIALIZAÇÃO GERAL AO CARREGAR PÁGINA
+// ✅ INICIALIZAÇÃO
 // =========================================================
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -170,21 +188,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const chkPromocao = document.getElementById('chk_promocao');
     const aceiteFinal = document.getElementById('aceite_final_contrato');
 
-    // ✅ MÁSCARA CPF
+    // ✅ Máscaras
     if (campoCPF) {
         campoCPF.addEventListener('input', e => {
             e.target.value = aplicarMascaraCPF(e.target.value);
         });
     }
-
-    // ✅ MÁSCARA TELEFONE
     if (campoTel) {
         campoTel.addEventListener('input', e => {
             e.target.value = aplicarMascaraTelefone(e.target.value);
         });
     }
-
-    // ✅ NOME — Cada palavra com inicial maiúscula
     if (campoNome) {
         campoNome.addEventListener('input', e => {
             e.target.value = e.target.value
@@ -203,14 +217,11 @@ document.addEventListener("DOMContentLoaded", () => {
         chkPromocao.addEventListener('change', atualizarPromocao);
     }
 
-    // =========================================================
-    // ✅ ÚLTIMA DECLARAÇÃO — Marca APENAS os checkbox de ACEITE DOS TERMOS (por NAME)
-    // =========================================================
+    // ✅ Marca todos os aceites (por NAME)
     if (aceiteFinal) {
         aceiteFinal.addEventListener('change', function () {
             const marcar = this.checked;
             const aceites = form.querySelectorAll('input[type="checkbox"][name^="aceite_"]');
-
             aceites.forEach(checkbox => {
                 if (checkbox.name !== 'aceite_final_contrato') {
                     checkbox.checked = marcar;
@@ -220,7 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =========================================================
-    // ✅ ENVIO DO FORMULÁRIO → REDIRECIONA PARA PÁGINA DE SUCESSO
+    // ✅ ENVIO DO FORMULÁRIO
     // =========================================================
     if (form) {
         form.addEventListener("submit", async (e) => {
@@ -234,7 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 const formData = new FormData(form);
 
-                // ✅ Define horário com base na opção escolhida
+                // ✅ Define horário
                 let horario_inicio, horario_termino;
                 const tipo_horario = formData.get("horario_tipo");
                 if (tipo_horario === 'dia') {
@@ -251,14 +262,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     horario_termino = formData.get("horario_termino_personalizado");
                 }
 
-                // ✅ Validação de horários ANTES de enviar
                 if (!horario_inicio || !horario_termino) {
                     alert("⚠️ Preencha os horários de início e término!");
                     if (btn) { btn.disabled = false; btn.textContent = "✅ Salvar e Enviar Contrato"; }
                     return;
                 }
 
-                // ✅ Reúne os dados para gerar o contrato
+                // ✅ Reúne dados
                 const dados = {
                     nome_contratante: formData.get("nome_contratante"),
                     cpf_contratante: formData.get("cpf_contratante"),
@@ -268,8 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     tipo_evento: formData.get("tipo_evento"),
                     observacao_evento: formData.get("observacao_evento") || "",
                     data_evento: converterData(formData.get("data_evento")),
-                    horario_inicio: horario_inicio,
-                    horario_termino: horario_termino,
+                    horario_inicio, horario_termino,
                     qtd_mesas: parseInt(formData.get("qtd_mesas")),
                     uso_piscina: formData.get("uso_piscina"),
                     uso_som: formData.get("uso_som"),
@@ -281,67 +290,42 @@ document.addEventListener("DOMContentLoaded", () => {
                     valor_pago: parseFloat(formData.get("valor_pago")) || 0
                 };
 
-                // ✅ Cálculo de valores
-                const valorMesas = { "15": 0, "20": 60, "25": 120 }[dados.qtd_mesas] || 0;
-                const valorPula = dados.pula_pula ? 110 : 0;
-                const valorBolinha = dados.piscina_bolinha ? 110 : 0;
-                const somMicrofone = dados.uso_som === "sim_microfone" ? 30 : 0;
-                const promocao = dados.pula_pula && dados.piscina_bolinha ? 20 : 0;
-                const valorTotal = (valorMesas + valorPula + valorBolinha + somMicrofone - promocao).toFixed(2);
+                // ✅ CALCULA VALOR (usando função unificada)
+                const valorTotal = calcularValorTotal(formData);
+                const resultado = { id_contrato: Date.now(), valor_total: valorTotal };
 
-                const resultado = {
-                    id_contrato: Date.now(),
-                    valor_total: valorTotal
-                };
-
-                // 📄 GERA E BAIXA O CONTRATO ANTES DE REDIRECIONAR
+                // 📄 Gera contrato
                 gerarPDF(dados, resultado);
 
-                // ✅ ENVIA AO FORMSPREE
+                // ✅ Envia ao Formspree
                 const resposta = await fetch(form.action, {
                     method: "POST",
                     body: formData,
                     headers: { 'Accept': 'application/json' }
                 });
 
-                // ✅ REDIRECIONA PARA PÁGINA DE SUCESSO COM OS DADOS
+                // ✅ SUCESSO — ABRE EM NOVA GUIA
                 if (resposta.ok) {
                     window.open(`sucesso.html?id=${resultado.id_contrato}&valor=R$ ${valorTotal}`, '_blank');
-                    return;
+                    form.reset();
                 } else {
                     throw new Error(`Servidor respondeu com erro: ${resposta.status}`);
                 }
 
             } catch (erro) {
                 console.error("❌ Erro:", erro);
+                const formDataTemp = new FormData(form);
+                const valorTotal = calcularValorTotal(formDataTemp);
+                const idContrato = Date.now();
 
-                // ✅ Mesmo com erro de JSON → REDIRECIONA (Formspree às vezes não retorna JSON)
+                // ✅ Mesmo com erro de JSON → ABRE EM NOVA GUIA COM VALOR CORRETO
                 if (erro.message.includes('Unexpected token') || erro.message.includes('is not valid JSON')) {
-                    const formDataTemp = new FormData(form);
-                    const valorMesas = { "15": 0, "20": 60, "25": 120 }[parseInt(formDataTemp.get("qtd_mesas"))] || 0;
-                    const pula = formDataTemp.get("pula_pula") === "true";
-                    const bolinha = formDataTemp.get("piscina_bolinha") === "true";
-                    const som = formDataTemp.get("uso_som") === "sim_microfone" ? 30 : 0;
-                    const promocao = pula && bolinha ? 20 : 0;
-                    const valorTotal = (valorMesas + (pula ? 110 : 0) + (bolinha ? 110 : 0) + som - promocao).toFixed(2);
-                    const idContrato = Date.now();
-
                     window.open(`sucesso.html?id=${idContrato}&valor=R$ ${valorTotal}`, '_blank');
-                    return;
+                    form.reset();
+                } else {
+                    alert(`❌ Erro: ${erro.message || 'Não foi possível conectar'}`);
                 }
-
-                // ⚠️ Erro real
-                alert(`❌ Erro de conexão: ${erro.message || 'Não foi possível conectar ao servidor'}`);
-                if (statusDiv) {
-                    statusDiv.style.display = 'block';
-                    statusDiv.style.background = '#fee2e2';
-                    statusDiv.style.color = '#991b1b';
-                    statusDiv.innerHTML = '❌ <strong>Erro ao enviar.</strong> Tente novamente ou entre em contato.';
-                }
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = "✅ Salvar e Enviar Contrato";
-                }
+                if (btn) { btn.disabled = false; btn.textContent = "✅ Salvar e Enviar Contrato"; }
             }
         });
     }
