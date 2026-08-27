@@ -38,6 +38,20 @@ function mostrarHorariosPersonalizados() {
         }
     }
 }
+// =========================================================
+// ✅ FORMATAÇÃO DE ENDEREÇO — com espaços preservados
+// =========================================================
+document.getElementById('endereco_contratante').addEventListener('input', function(e) {
+    // Divide por vírgulas, formata cada parte e mantém espaços corretos
+    e.target.value = e.target.value.split(',')
+        .map(parte => {
+            const texto = parte.trim();
+            if (texto.length === 0) return '';
+            // Primeira letra maiúscula, restante normal
+            return texto[0].toUpperCase() + texto.slice(1);
+        })
+        .join(', '); // ✅ Adiciona espaço APÓS a vírgula automaticamente
+});
 
 // =========================================================
 // ✅ PROMOÇÃO — marca/desmarca itens juntos
