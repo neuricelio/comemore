@@ -257,7 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (aceiteFinal) {
         aceiteFinal.addEventListener('change', function () {
             const marcar = this.checked;
-            const aceites = form.querySelectorAll('input[type="checkbox"][id^="aceite_"]');
+            const aceites = form.querySelectorAll('input[type="checkbox"][name^="aceite_"]');
 
             aceites.forEach(checkbox => {
                 if (checkbox.id !== 'aceite_final_contrato') {
