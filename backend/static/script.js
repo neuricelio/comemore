@@ -179,12 +179,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (checkbox.id !== 'aceite_final_contrato') {
                     checkbox.checked = marcar;
                     // Se tiver promoção, mantém regra especial
-                    if (checkbox.id === 'chk_pula_pula' || checkbox.id === 'chk_piscina_bolinha') {
-                        const promocao = document.getElementById('chk_promocao');
-                        if (promocao && promocao.checked) {
-                            checkbox.checked = true;
-                            checkbox.disabled = true;
-                        }
+                    //if (checkbox.id === 'chk_pula_pula' || checkbox.id === 'chk_piscina_bolinha') {
+                    //    const promocao = document.getElementById('chk_promocao');
+                    //    if (promocao && promocao.checked) {
+                    //        checkbox.checked = true;
+                    //        checkbox.disabled = true;
+                    //    }
                     }
                 }
             });
