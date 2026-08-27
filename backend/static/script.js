@@ -163,45 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const campoNome = document.getElementById('nome_contratante');
     const selectHorario = document.getElementById('horario_tipo');
     const chkPromocao = document.getElementById('chk_promocao');
-    const aceiteFinal = document.getElementById('aceite_final_contrato');
-    // =========================================================
-    // ✅ ÚLTIMA DECLARAÇÃO — Marca TODOS os checkbox ao clicar
-    // =========================================================
-    if (aceiteFinal) {
-        aceiteFinal.addEventListener('change', function () {
-            const marcar = this.checked;
-            
-            // Seleciona TODOS os checkbox do formulário
-            const todosCheckbox = form.querySelectorAll('input[type="checkbox"]');
-            
-            todosCheckbox.forEach(checkbox => {
-                // Não altera a própria última declaração (ela controla)
-                if (checkbox.id !== 'aceite_final_contrato') {
-                    checkbox.checked = marcar;
-                    // Se tiver promoção, mantém regra especial
-                    //if (checkbox.id === 'chk_pula_pula' || checkbox.id === 'chk_piscina_bolinha') {
-                    //    const promocao = document.getElementById('chk_promocao');
-                    //    if (promocao && promocao.checked) {
-                    //        checkbox.checked = true;
-                    //        checkbox.disabled = true;
-                    //    }
-                    }
-                }
-            });
-        });
-    }
-    // Marca a declaração final se TODOS os outros estiverem marcados
-    form.addEventListener('change', function (e) {
-        if (e.target.type === 'checkbox' && e.target.id !== 'aceite_final_contrato') {
-            const todos = form.querySelectorAll('input[type="checkbox"]:checked');
-            const total = form.querySelectorAll('input[type="checkbox"]').length - 1; // -1 = exclui o final
-            if (todos.length === total && aceiteFinal) {
-                aceiteFinal.checked = true;
-            } else if (aceiteFinal && e.target.checked === false) {
-                aceiteFinal.checked = false;
-            }
-        }
-    });    
+
     // ✅ MÁSCARA CPF
     if (campoCPF) {
         campoCPF.addEventListener('input', e => {
@@ -236,6 +198,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (chkPromocao) {
         chkPromocao.addEventListener('change', atualizarPromocao);
+    }
+
+    // =========================================================
+    // ✅ ÚLTIMA DECLARAÇÃO — Marca APENAS os checkbox de ACEITE DOS TERMOS
+    // =========================================================
+    const aceiteFinal = document.getElementById('aceite_final_contrato');
+
+    if (aceiteFinal) {
+        aceiteFinal.addEventListener('change', function () {
+            const marcar = this.checked;
+
+            // ✅ SELECIONA SOMENTE os checkbox de ACEITE (começam com "aceite_")
+            const aceites = form.querySelectorAll('input[type="checkbox"][id^="aceite_"]');
+
+            aceites.forEach(checkbox => {
+                // ❌ NÃO marca a própria última declaração
+                if (checkbox.id !== 'aceite_final_contrato') {
+                    checkbox.checked = marcar;
+                }
+            });
+        });
     }
 
     // ✅ Mensagem de sucesso ao voltar do redirecionamento
@@ -339,7 +322,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 }, 800);
 
                 // ✅ DEIXA O FORMULÁRIO ENVIAR DIRETO AO FORMSPREE — SEM fetch()!
-                // Removemos e.preventDefault() → o formulário envia naturalmente!
 
             } catch (erro) {
                 console.error("❌ Erro:", erro);
