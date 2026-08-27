@@ -159,54 +159,6 @@ Contrato nº ${res.id_contrato} - Gerado em ${dataHoje}
 }
 
 // =========================================================
-// ✅ EXIBE MENSAGEM UNIFICADA COM DOIS BOTÕES
-// =========================================================
-function exibirMensagemSucesso(idContrato, valorTotal) {
-    if (!statusDiv) return;
-
-    alert(`✅ Contrato enviado com sucesso!\n\nID: ${idContrato}\nTotal: R$ ${valorTotal}\n\nVerifique seu e-mail (caixa de spam também).`);
-
-    statusDiv.style.display = 'block';
-    statusDiv.style.background = '#dcfce7';
-    statusDiv.style.color = '#166534';
-    statusDiv.style.padding = '25px';
-    statusDiv.style.borderRadius = '10px';
-    statusDiv.style.textAlign = 'center';
-
-    statusDiv.innerHTML = `
-        <h2 style="margin-top: 0; color: #166534;">✅ Obrigado!</h2>
-        <p style="font-size: 16px; margin: 10px 0;">Contrato enviado com sucesso.</p>
-        <p style="font-size: 15px; margin: 8px 0;">ID do Contrato: <strong style="font-size: 17px;">${idContrato}</strong></p>
-        <p style="font-size: 15px; margin: 8px 0;">Valor Total: <strong style="font-size: 17px;">R$ ${valorTotal}</strong></p>
-        <p style="font-size: 14px; margin: 15px 0 25px 0; color: #15803d;">Verifique seu e-mail e também a caixa de spam/lixo eletrônico.</p>
-        
-        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-            <button onclick="window.close()" style="
-                padding: 12px 24px;
-                background: #6b7280;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                font-size: 15px;
-                font-weight: bold;
-                cursor: pointer;
-            ">🔒 FECHAR</button>
-
-            <button onclick="window.location.reload()" style="
-                padding: 12px 24px;
-                background: #2563eb;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                font-size: 15px;
-                font-weight: bold;
-                cursor: pointer;
-            ">📝 PREENCHER OUTRO CONTRATO</button>
-        </div>
-    `;
-}
-
-// =========================================================
 // ✅ INICIALIZAÇÃO GERAL AO CARREGAR PÁGINA
 // =========================================================
 document.addEventListener("DOMContentLoaded", () => {
@@ -252,7 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =========================================================
-    // ✅ ÚLTIMA DECLARAÇÃO — Marca APENAS os checkbox de ACEITE DOS TERMOS
+    // ✅ ÚLTIMA DECLARAÇÃO — Marca APENAS os checkbox de ACEITE DOS TERMOS (por NAME)
     // =========================================================
     if (aceiteFinal) {
         aceiteFinal.addEventListener('change', function () {
@@ -260,7 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const aceites = form.querySelectorAll('input[type="checkbox"][name^="aceite_"]');
 
             aceites.forEach(checkbox => {
-                if (checkbox.id !== 'aceite_final_contrato') {
+                if (checkbox.name !== 'aceite_final_contrato') {
                     checkbox.checked = marcar;
                 }
             });
@@ -268,7 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =========================================================
-    // ✅ ENVIO DO FORMULÁRIO — Via fetch + confirmação do Formspree
+    // ✅ ENVIO DO FORMULÁRIO → REDIRECIONA PARA PÁGINA DE SUCESSO
     // =========================================================
     if (form) {
         form.addEventListener("submit", async (e) => {
@@ -342,48 +294,50 @@ document.addEventListener("DOMContentLoaded", () => {
                     valor_total: valorTotal
                 };
 
-                // 📄 GERA E BAIXA O CONTRATO ANTES DE ENVIAR
+                // 📄 GERA E BAIXA O CONTRATO ANTES DE REDIRECIONAR
                 gerarPDF(dados, resultado);
 
-                // ✅ ENVIA AO FORMSPREE E RECEBE CONFIRMAÇÃO
+                // ✅ ENVIA AO FORMSPREE
                 const resposta = await fetch(form.action, {
                     method: "POST",
                     body: formData,
                     headers: { 'Accept': 'application/json' }
                 });
 
-                // ✅ CONFIRMAÇÃO RECEBIDA → EXIBE MENSAGEM
+                // ✅ REDIRECIONA PARA PÁGINA DE SUCESSO COM OS DADOS
                 if (resposta.ok) {
-                    exibirMensagemSucesso(resultado.id_contrato, valorTotal);
-                    form.reset();
+                    window.location.href = `sucesso.html?id=${resultado.id_contrato}&valor=R$ ${valorTotal}`;
+                    return;
                 } else {
                     throw new Error(`Servidor respondeu com erro: ${resposta.status}`);
                 }
 
             } catch (erro) {
                 console.error("❌ Erro:", erro);
-                // ✅ Mesmo se houver erro de JSON, mostra sucesso
+
+                // ✅ Mesmo com erro de JSON → REDIRECIONA (Formspree às vezes não retorna JSON)
                 if (erro.message.includes('Unexpected token') || erro.message.includes('is not valid JSON')) {
-                    const valorMesas = { "15": 0, "20": 60, "25": 120 }[parseInt(formData.get("qtd_mesas"))] || 0;
-                    const pula = formData.get("pula_pula") === "true";
-                    const bolinha = formData.get("piscina_bolinha") === "true";
-                    const som = formData.get("uso_som") === "sim_microfone" ? 30 : 0;
+                    const formDataTemp = new FormData(form);
+                    const valorMesas = { "15": 0, "20": 60, "25": 120 }[parseInt(formDataTemp.get("qtd_mesas"))] || 0;
+                    const pula = formDataTemp.get("pula_pula") === "true";
+                    const bolinha = formDataTemp.get("piscina_bolinha") === "true";
+                    const som = formDataTemp.get("uso_som") === "sim_microfone" ? 30 : 0;
                     const promocao = pula && bolinha ? 20 : 0;
                     const valorTotal = (valorMesas + (pula ? 110 : 0) + (bolinha ? 110 : 0) + som - promocao).toFixed(2);
                     const idContrato = Date.now();
 
-                    exibirMensagemSucesso(idContrato, valorTotal);
-                    form.reset();
-                } else {
-                    alert(`❌ Erro de conexão: ${erro.message || 'Não foi possível conectar ao servidor'}`);
-                    if (statusDiv) {
-                        statusDiv.style.display = 'block';
-                        statusDiv.style.background = '#fee2e2';
-                        statusDiv.style.color = '#991b1b';
-                        statusDiv.innerHTML = '❌ <strong>Erro ao enviar.</strong> Tente novamente ou entre em contato.';
-                    }
+                    window.location.href = `sucesso.html?id=${idContrato}&valor=R$ ${valorTotal}`;
+                    return;
                 }
-            } finally {
+
+                // ⚠️ Erro real
+                alert(`❌ Erro de conexão: ${erro.message || 'Não foi possível conectar ao servidor'}`);
+                if (statusDiv) {
+                    statusDiv.style.display = 'block';
+                    statusDiv.style.background = '#fee2e2';
+                    statusDiv.style.color = '#991b1b';
+                    statusDiv.innerHTML = '❌ <strong>Erro ao enviar.</strong> Tente novamente ou entre em contato.';
+                }
                 if (btn) {
                     btn.disabled = false;
                     btn.textContent = "✅ Salvar e Enviar Contrato";
