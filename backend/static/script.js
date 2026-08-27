@@ -210,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const marcar = this.checked;
 
             // ✅ SELECIONA SOMENTE os checkbox de ACEITE (começam com "aceite_")
-            const aceites = form.querySelectorAll('input[type="checkbox"][name^="aceite_"]');
+            const aceites = form.querySelectorAll('input[type="checkbox"][id^="aceite_"]');
 
             aceites.forEach(checkbox => {
                 // ❌ NÃO marca a própria última declaração
@@ -233,10 +233,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================================================
     // ✅ ENVIO DO FORMULÁRIO — SEM fetch → ACABA O ERRO!
     // =========================================================
-    // =========================================================
     if (form) {
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault(); // ✅ Impede o envio padrão do Formspree
+        form.addEventListener("submit", (e) => {
             const btn = document.getElementById("btnSalvar");
             if (btn) {
                 btn.disabled = true;
@@ -267,6 +265,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!horario_inicio || !horario_termino) {
                     alert("⚠️ Preencha os horários de início e término!");
                     if (btn) { btn.disabled = false; btn.textContent = "✅ Salvar e Enviar Contrato"; }
+                    e.preventDefault();
                     return;
                 }
 
@@ -309,64 +308,27 @@ document.addEventListener("DOMContentLoaded", () => {
                 // 📄 GERA E BAIXA O CONTRATO ANTES DE ENVIAR
                 gerarPDF(dados, resultado);
 
-                // ✅ ENVIA AO FORMSPREE E RECEBE CONFIRMAÇÃO
-                const resposta = await fetch(form.action, {
-                    method: "POST",
-                    body: formData,
-                    headers: { 'Accept': 'application/json' }
-                });
-
-                // ✅ CONFIRMAÇÃO RECEBIDA DO FORMSPREE
-                if (resposta.ok) {
-                    // ✅ EXIBE MENSAGEM DE SUCESSO NA SUA PÁGINA
-                    alert(`✅ Contrato enviado com sucesso!\n\nID: ${resultado.id_contrato}\nTotal: R$ ${valorTotal}\n\nVerifique seu e-mail (caixa de spam também).`);
-                    
+                // ✅ MOSTRA MENSAGEM DE SUCESSO APÓS ENVIO
+                setTimeout(() => {
+                    alert(`✅ Contrato enviado!\nID: ${resultado.id_contrato}\nTotal: R$ ${valorTotal}\nVerifique seu e-mail (caixa de spam também).`);
                     if (statusDiv) {
                         statusDiv.style.display = 'block';
                         statusDiv.style.background = '#dcfce7';
                         statusDiv.style.color = '#166534';
-                        statusDiv.innerHTML = `
-                            <h3>✅ Obrigado!</h3>
-                            <p>Contrato enviado com sucesso.</p>
-                            <p>ID do Contrato: <strong>${resultado.id_contrato}</strong></p>
-                            <p>Verifique seu e-mail e também a caixa de spam/lixo eletrônico.</p>
-                        `;
+                        statusDiv.innerHTML = '✅ <strong>Contrato enviado com sucesso!</strong><br>Verifique seu e-mail e também a caixa de spam/lixo eletrônico.';
                     }
                     form.reset();
-                } else {
-                    throw new Error(`Servidor respondeu com erro: ${resposta.status}`);
-                }
+                    if (btn) { btn.disabled = false; btn.textContent = "✅ Salvar e Enviar Contrato"; }
+                }, 800);
+
+                // ✅ DEIXA O FORMULÁRIO ENVIAR DIRETO AO FORMSPREE — SEM fetch()!
 
             } catch (erro) {
                 console.error("❌ Erro:", erro);
-                // ✅ Mesmo se houver erro de JSON, considera enviado
-                if (erro.message.includes('Unexpected token') || erro.message.includes('is not valid JSON')) {
-                    alert("✅ Contrato enviado com sucesso!\nVerifique seu e-mail e também a caixa de spam.");
-                    if (statusDiv) {
-                        statusDiv.style.display = 'block';
-                        statusDiv.style.background = '#dcfce7';
-                        statusDiv.style.color = '#166534';
-                        statusDiv.innerHTML = `
-                            <h3>✅ Obrigado!</h3>
-                            <p>Contrato enviado com sucesso.</p>
-                            <p>Verifique seu e-mail e também a caixa de spam/lixo eletrônico.</p>
-                        `;
-                    }
-                    form.reset();
-                } else {
-                    alert(`❌ Erro de conexão: ${erro.message || 'Não foi possível conectar ao servidor'}`);
-                    if (statusDiv) {
-                        statusDiv.style.display = 'block';
-                        statusDiv.style.background = '#fee2e2';
-                        statusDiv.style.color = '#991b1b';
-                        statusDiv.innerHTML = '❌ <strong>Erro ao enviar.</strong> Tente novamente ou entre em contato.';
-                    }
-                }
-            } finally {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = "✅ Salvar e Enviar Contrato";
-                }
+                alert(`⚠️ Verifique se todos os campos estão preenchidos!`);
+                if (btn) { btn.disabled = false; btn.textContent = "✅ Salvar e Enviar Contrato"; }
+                e.preventDefault();
             }
         });
     }
+});
