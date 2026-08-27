@@ -1,66 +1,360 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Termos e Condições do Contrato</title>
-    <link rel="stylesheet" href="/estilo.css">
-</head>
-<body>
-    <div class="cabecalho">
-        <h1>📋 TERMOS E CONDIÇÕES DO CONTRATO</h1>
-        <p>Buffet Espaço Comemore Festas e Eventos</p>
-    </div>
+// =========================================================
+// ✅ VARIÁVEIS GLOBAIS
+// =========================================================
+const campoEmail = document.getElementById('email_contratante');
+const campoReplyto = document.getElementById('campo_email_resposta');
+const campoCopia = document.getElementById('campo_copia_cliente');
+const form = document.getElementById('formContrato');
+const statusDiv = document.getElementById('mensagem-status');
 
-    <div class="secao">
-        <h2>4. FUNCIONAMENTO DO ESPAÇO PARTICULAR</h2>
-        <p>O Espaço deve ser utilizado no período estabelecido para festa particular na residência do CONTRATADO.</p>
-        <p>• Após o horário contratado, deverão ser devolvidas imediatamente as chaves e controles em perfeito estado.</p>
-        <p>• Deve ser cumprido o acordo sobre uso da piscina, zelando pelo bom uso.</p>
-        <p>• O uso é exclusivo do CONTRATANTE, intransferível e proibido para festas com cobrança de ingressos.</p>
-    </div>
+// =========================================================
+// ✅ PREENCHE E-MAIL DE RESPOSTA E CÓPIA AUTOMATICAMENTE
+// =========================================================
+if (campoEmail && campoReplyto && campoCopia) {
+    campoEmail.addEventListener('input', function () {
+        campoReplyto.value = this.value;
+        campoCopia.value = this.value;
+    });
+}
 
-    <div class="secao">
-        <h2>5. UTILIZAÇÃO DO ESPAÇO</h2>
-        <p>Ao assinar, o cliente tem direito ao uso completo do espaço, incluindo quantidade de mesas definida, freezer, fogão industrial, gás, uso da piscina conforme acordado.</p>
-        <p>✅ Permitido: servir comida e bebida, decoração (desde que não danifique estrutura e seja retirada ao final).</p>
-        <p>❌ Proibido: consumo dentro da piscina, fogos de artifício, qualquer tipo de fogo que ofereça risco.</p>
-        <p>Atraso na devolução implicará multa de 1/3 do valor por hora, limitado a 2 horas.</p>
-    </div>
+// =========================================================
+// ✅ HORÁRIOS PERSONALIZADOS
+// =========================================================
+function mostrarHorariosPersonalizados() {
+    const select = document.getElementById('horario_tipo');
+    const div = document.getElementById('horarios_personalizados');
+    const hInicio = document.getElementById('horario_inicio_personalizado');
+    const hTermino = document.getElementById('horario_termino_personalizado');
 
-    <div class="secao">
-        <h2>6. OBRIGAÇÕES DO CONTRATADO</h2>
-        <p>✅ Entregar o espaço limpo, banheiros com papel higiênico, toalha e sabonete, piscina e churrasqueira limpas, freezer ligado e chaves.</p>
-        <p>❌ Não se responsabiliza pela segurança do ambiente, guarda de objetos ou crianças/adolescentes — estes devem estar sempre acompanhados dos responsáveis, especialmente próximo à piscina.</p>
-    </div>
+    if (select && div) {
+        if (select.value === 'outros') {
+            div.style.display = 'block';
+            if (hInicio) hInicio.required = true;
+            if (hTermino) hTermino.required = true;
+        } else {
+            div.style.display = 'none';
+            if (hInicio) { hInicio.required = false; hInicio.value = ''; }
+            if (hTermino) { hTermino.required = false; hTermino.value = ''; }
+        }
+    }
+}
 
-    <div class="secao">
-        <h2>7. OBRIGAÇÕES DO CONTRATANTE</h2>
-        <p>✅ Manter menores acompanhados de responsáveis.</p>
-        <p>✅ Efetuar pagamento: 50% no ato da reserva e 50% até 5 dias antes do evento, apenas em dinheiro ou PIX — não são aceitos cheques.</p>
-        <p>✅ Orientar decoradores a não usar grampos, adesivos ou colas que danifiquem paredes e estrutura, arcando com prejuízos se houver danos.</p>
-        <p>✅ Comparecer no horário definido para retirada das chaves.</p>
-    </div>
+// =========================================================
+// ✅ PROMOÇÃO — marca/desmarca itens juntos
+// =========================================================
+function atualizarPromocao() {
+    const promocao = document.getElementById('chk_promocao');
+    const pula = document.getElementById('chk_pula_pula');
+    const bolinha = document.getElementById('chk_piscina_bolinha');
 
-    <div class="secao">
-        <h2>8. CANCELAMENTO OU ALTERAÇÃO DE DATA</h2>
-        <p>🔹 Alteração com pelo menos 7 dias de antecedência: multa de 40% do valor total, nova data sujeita à disponibilidade.</p>
-        <p>🔹 Cancelamento com pelo menos 7 dias: devolução de 10% do valor pago, restante retido como multa — restituição em até 60 dias.</p>
-        <p>🔹 Alteração ou cancelamento com menos de 7 dias: sem devolução de valores.</p>
-    </div>
+    if (promocao && pula && bolinha) {
+        if (promocao.checked) {
+            pula.checked = true;
+            bolinha.checked = true;
+            pula.disabled = true;
+            bolinha.disabled = true;
+        } else {
+            pula.checked = false;
+            bolinha.checked = false;
+            pula.disabled = false;
+            bolinha.disabled = false;
+        }
+    }
+}
 
-    <div class="secao">
-        <h2>9. INFORMAÇÕES GERAIS</h2>
-        <p>• O local é residencial — volume do som deve ser reduzido após às 22h.</p>
-        <p>• Não há responsabilidade por objetos perdidos ou esquecidos.</p>
-        <p>• Capacidade máxima: 120 pessoas.</p>
-        <p>• Falta de energia não dá direito a reembolso.</p>
-        <p>• Qualquer dano ao ambiente deve ser ressarcido.</p>
-        <p>• Foro da Comarca de Rio Branco/AC para resolução de conflitos.</p>
-    </div>
+// =========================================================
+// ✅ MÁSCARA PARA CPF — 000.000.000-00
+// =========================================================
+function aplicarMascaraCPF(valor) {
+    valor = valor.replace(/\D/g, '');
+    if (valor.length <= 3) return valor;
+    if (valor.length <= 6) return `${valor.slice(0, 3)}.${valor.slice(3)}`;
+    if (valor.length <= 9) return `${valor.slice(0, 3)}.${valor.slice(3, 6)}.${valor.slice(6)}`;
+    return `${valor.slice(0, 3)}.${valor.slice(3, 6)}.${valor.slice(6, 9)}-${valor.slice(9, 11)}`;
+}
 
-    <div style="text-align: center; margin-top: 30px;">
-        <button onclick="window.close()" style="padding: 10px 25px; font-size: 16px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer;">Fechar e Voltar ao Contrato</button>
-    </div>
-</body>
-</html>
+// =========================================================
+// ✅ MÁSCARA PARA TELEFONE — (00) 00000-0000
+// =========================================================
+function aplicarMascaraTelefone(valor) {
+    valor = valor.replace(/\D/g, '');
+    if (valor.length <= 2) return `(${valor}`;
+    if (valor.length <= 7) return `(${valor.slice(0, 2)}) ${valor.slice(2)}`;
+    return `(${valor.slice(0, 2)}) ${valor.slice(2, 7)}-${valor.slice(7, 11)}`;
+}
+
+// =========================================================
+// ✅ CONVERSÃO DE DATA ISO → BR
+// =========================================================
+function converterData(dataIso) {
+    if (!dataIso) return "";
+    const [ano, mes, dia] = dataIso.split("-");
+    return `${dia}/${mes}/${ano}`;
+}
+
+// =========================================================
+// ✅ GERA ARQUIVO DE CONTRATO (.txt)
+// =========================================================
+function gerarPDF(dados, res) {
+    const dataHoje = new Date().toLocaleDateString('pt-BR');
+    const valorRestante = (res.valor_total - dados.valor_pago).toFixed(2);
+
+    const conteudo = `
+====================================================================
+                CONTRATO DE PRESTAÇÃO DE SERVIÇOS
+               Espaço Comemore Festas e Eventos
+====================================================================
+CONTRATADO: Leandro Ruy Batista da Silva
+CPF: 682.459.552-72
+Endereço: Rua Isaura Parente, nº 100 - Rio Branco/AC
+Telefone: (68) 99921-7686 / 99241-4341
+--------------------------------------------------------------------
+CONTRATANTE:
+Nome: ${dados.nome_contratante}
+CPF: ${dados.cpf_contratante}
+Endereço: ${dados.endereco_contratante}
+Telefone: ${dados.telefone_contratante}
+--------------------------------------------------------------------
+DADOS DO EVENTO:
+Tipo: ${dados.tipo_evento}
+Data: ${dados.data_evento}
+Horário: ${dados.horario_inicio} às ${dados.horario_termino}
+Mesas: ${dados.qtd_mesas}
+Piscina: ${dados.uso_piscina}
+Som: ${dados.uso_som}
+Pula-Pula: ${dados.pula_pula ? 'SIM' : 'NÃO'}
+Piscina de Bolinhas: ${dados.piscina_bolinha ? 'SIM' : 'NÃO'}
+--------------------------------------------------------------------
+VALORES:
+Valor Total da Locação....: R$ ${res.valor_total}
+Valor Pago pelo Cliente....: R$ ${dados.valor_pago.toFixed(2)}
+Valor Restante a Pagar.....: R$ ${valorRestante}
+Forma de Pagamento: ${dados.forma_pagamento_entrada}
+--------------------------------------------------------------------
+Declaro que li, conferi e concordo com todos os termos do contrato.
+Rio Branco/AC, ${dataHoje}
+__________________________________________________
+Assinatura do Contratante
+__________________________________________________
+Assinatura do Contratado
+====================================================================
+Contrato nº ${res.id_contrato} - Gerado em ${dataHoje}
+====================================================================
+    `.trim();
+
+    const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Contrato_${res.id_contrato}_${dados.data_evento.replace(/\//g, '-')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// =========================================================
+// ✅ INICIALIZAÇÃO GERAL AO CARREGAR PÁGINA
+// =========================================================
+document.addEventListener("DOMContentLoaded", () => {
+
+    const campoCPF = document.getElementById('cpf_contratante');
+    const campoTel = document.getElementById('telefone_contratante');
+    const campoNome = document.getElementById('nome_contratante');
+    const selectHorario = document.getElementById('horario_tipo');
+    const chkPromocao = document.getElementById('chk_promocao');
+
+    // ✅ MÁSCARA CPF
+    if (campoCPF) {
+        campoCPF.addEventListener('input', e => {
+            e.target.value = aplicarMascaraCPF(e.target.value);
+        });
+    }
+
+    // ✅ MÁSCARA TELEFONE
+    if (campoTel) {
+        campoTel.addEventListener('input', e => {
+            e.target.value = aplicarMascaraTelefone(e.target.value);
+        });
+    }
+
+    // ✅ NOME — Cada palavra com inicial maiúscula
+    if (campoNome) {
+        campoNome.addEventListener('input', e => {
+            e.target.value = e.target.value
+                .split(' ')
+                .map(palavra => palavra.length ? palavra[0].toUpperCase() + palavra.slice(1).toLowerCase() : '')
+                .join(' ');
+        });
+    }
+
+    // =========================================================
+    // ✅ ENDEREÇO — SEM MÁSCARA / SEM FORMATAÇÃO
+    // O cliente digita livremente, sem nenhuma alteração
+    // =========================================================
+    // ✅ CÓDIGO REMOVIDO: NÃO HÁ MAIS NENHUMA FORMATAÇÃO NO ENDEREÇO
+
+    // ✅ Inicializa horários e promoção
+    if (selectHorario) {
+        selectHorario.addEventListener('change', mostrarHorariosPersonalizados);
+        mostrarHorariosPersonalizados();
+    }
+    if (chkPromocao) {
+        chkPromocao.addEventListener('change', atualizarPromocao);
+    }
+
+    // ✅ Mensagem de sucesso ao voltar do redirecionamento
+    if (window.location.search.includes('sucesso=1') && statusDiv) {
+        statusDiv.style.display = 'block';
+        statusDiv.style.background = '#dcfce7';
+        statusDiv.style.color = '#166534';
+        statusDiv.innerHTML = '✅ <strong>Contrato enviado com sucesso!</strong><br>Verifique seu e-mail e também a caixa de spam/lixo eletrônico.';
+        history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    // =========================================================
+    // ✅ ENVIO DO FORMULÁRIO — Formspree SEM erro JSON
+    // =========================================================
+    if (form) {
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById("btnSalvar");
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = "Enviando...";
+            }
+
+            try {
+                const formData = new FormData(form);
+
+                // ✅ Define horário com base na opção escolhida
+                let horario_inicio, horario_termino;
+                const tipo_horario = formData.get("horario_tipo");
+                if (tipo_horario === 'dia') {
+                    horario_inicio = "09:00";
+                    horario_termino = "17:00";
+                } else if (tipo_horario === 'noite_semana') {
+                    horario_inicio = "17:00";
+                    horario_termino = "23:00";
+                } else if (tipo_horario === 'noite_sabado') {
+                    horario_inicio = "17:00";
+                    horario_termino = "02:00";
+                } else {
+                    horario_inicio = formData.get("horario_inicio");
+                    horario_termino = formData.get("horario_termino");
+                }
+
+                // ✅ Validação de horários
+                if (!horario_inicio || !horario_termino) {
+                    alert("⚠️ Preencha os horários de início e término!");
+                    if (btn) { btn.disabled = false; btn.textContent = "✅ Salvar e Enviar Contrato"; }
+                    return;
+                }
+
+                // ✅ Dados do formulário
+                const dados = {
+                    nome_contratante: formData.get("nome_contratante"),
+                    cpf_contratante: formData.get("cpf_contratante"),
+                    endereco_contratante: formData.get("endereco_contratante"),
+                    telefone_contratante: formData.get("telefone_contratante"),
+                    email_contratante: formData.get("email_contratante"),
+                    tipo_evento: formData.get("tipo_evento"),
+                    observacao_evento: formData.get("observacao_evento") || "",
+                    data_evento: converterData(formData.get("data_evento")),
+                    horario_inicio: horario_inicio,
+                    horario_termino: horario_termino,
+                    qtd_mesas: parseInt(formData.get("qtd_mesas")),
+                    uso_piscina: formData.get("uso_piscina"),
+                    uso_som: formData.get("uso_som"),
+                    horario_entrega_bebidas: formData.get("horario_entrega_bebidas"),
+                    horario_recebimento_espaco: formData.get("horario_recebimento_espaco"),
+                    pula_pula: formData.get("pula_pula") === "true",
+                    piscina_bolinha: formData.get("piscina_bolinha") === "true",
+                    forma_pagamento_entrada: formData.get("forma_pagamento_entrada"),
+                    valor_pago: parseFloat(formData.get("valor_pago")) || 0,
+                    aceite_funcionamento: true,
+                    aceite_uso_espaco: true,
+                    aceite_obrigacoes_contratado: true,
+                    aceite_obrigacoes_contratante: true,
+                    aceite_cancelamento: true,
+                    aceite_gerais: true,
+                    aceite_final_contrato: true
+                };
+
+                console.log("📤 Enviando:", dados);
+
+                // ✅ ENVIA PELO FORMSPREE — SEM cabeçalho JSON → SEM ERRO!
+                const resposta = await fetch(form.action, {
+                    method: "POST",
+                    body: formData
+                });
+
+                // ✅ TRATA RESPOSTA — aceita qualquer formato
+                if (resposta.ok) {
+                    // Cálculo de valores
+                    const valorMesas = { "15": 0, "20": 60, "25": 120 }[dados.qtd_mesas] || 0;
+                    const valorPula = dados.pula_pula ? 110 : 0;
+                    const valorBolinha = dados.piscina_bolinha ? 110 : 0;
+                    const somMicrofone = dados.uso_som === "sim_microfone" ? 30 : 0;
+                    const promocao = dados.pula_pula && dados.piscina_bolinha ? 20 : 0;
+                    const valorTotal = (valorMesas + valorPula + valorBolinha + somMicrofone - promocao).toFixed(2);
+
+                    const resultado = {
+                        sucesso: true,
+                        mensagem: "Contrato enviado com sucesso!",
+                        id_contrato: Date.now(),
+                        valor_total: valorTotal
+                    };
+
+                    console.log("📥 Resposta:", resultado);
+
+                    alert(`✅ ${resultado.mensagem}\nID: ${resultado.id_contrato}\nTotal: R$ ${resultado.valor_total}\nValor Pago: R$ ${dados.valor_pago.toFixed(2)}`);
+
+                    // 📄 Baixa o contrato
+                    gerarPDF(dados, resultado);
+
+                    // ✅ Mensagem na página
+                    if (statusDiv) {
+                        statusDiv.style.display = 'block';
+                        statusDiv.style.background = '#dcfce7';
+                        statusDiv.style.color = '#166534';
+                        statusDiv.innerHTML = '✅ <strong>Contrato enviado com sucesso!</strong><br>Verifique seu e-mail e também a caixa de spam/lixo eletrônico.';
+                    }
+
+                    form.reset();
+
+                } else {
+                    throw new Error(`Servidor respondeu com erro: ${resposta.status}`);
+                }
+
+            } catch (erro) {
+                console.error("❌ Erro:", erro);
+
+                // ✅ Ignora erro de JSON do Formspree → mostra sucesso
+                if (erro.message.includes('Unexpected token') || erro.message.includes('is not valid JSON')) {
+                    alert("✅ Contrato enviado com sucesso!\nVerifique seu e-mail e também a caixa de spam.");
+                    if (statusDiv) {
+                        statusDiv.style.display = 'block';
+                        statusDiv.style.background = '#dcfce7';
+                        statusDiv.style.color = '#166534';
+                        statusDiv.innerHTML = '✅ <strong>Contrato enviado com sucesso!</strong><br>Verifique seu e-mail e também a caixa de spam/lixo eletrônico.';
+                    }
+                    form.reset();
+                } else {
+                    alert(`❌ Erro de conexão: ${erro.message || 'Não foi possível conectar ao servidor'}`);
+                    if (statusDiv) {
+                        statusDiv.style.display = 'block';
+                        statusDiv.style.background = '#fee2e2';
+                        statusDiv.style.color = '#991b1b';
+                        statusDiv.innerHTML = '❌ <strong>Erro ao enviar.</strong> Tente novamente ou entre em contato.';
+                    }
+                }
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = "✅ Salvar e Enviar Contrato";
+                }
+            }
+        });
+    }
+});
