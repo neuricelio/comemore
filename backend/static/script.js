@@ -39,20 +39,45 @@ function mostrarHorariosPersonalizados() {
     }
 }
 // =========================================================
-// ✅ FORMATAÇÃO DE ENDEREÇO — com espaços preservados
+// ✅ FORMATAÇÃO DE ENDEREÇO — Padrão: Rua, nº, Bairro, CEP — Cidade/UF
 // =========================================================
 document.getElementById('endereco_contratante').addEventListener('input', function(e) {
-    // Divide por vírgulas, formata cada parte e mantém espaços corretos
-    e.target.value = e.target.value.split(',')
-        .map(parte => {
-            const texto = parte.trim();
-            if (texto.length === 0) return '';
-            // Primeira letra maiúscula, restante normal
-            return texto[0].toUpperCase() + texto.slice(1);
-        })
-        .join(', '); // ✅ Adiciona espaço APÓS a vírgula automaticamente
-});
+    const valor = e.target.value;
+    
+    // Divide nas partes (antes e depois do travessão)
+    const partes = valor.split('—');
+    const principal = partes[0].split(',').map(p => p.trim()).filter(p => p);
+    const cidadeUF = partes.length > 1 ? partes[1].trim() : '';
 
+    // Formata cada parte: primeira letra maiúscula, mantém o resto
+    const formatarParte = (texto) => {
+        if (!texto) return '';
+        // Se for CEP, mantém como está
+        if (/^cep\s*\d/i.test(texto)) {
+            const match = texto.match(/\d{5}-?\d{3}/);
+            return match ? `CEP ${match[0]}` : texto.toUpperCase();
+        }
+        return texto[0].toUpperCase() + texto.slice(1);
+    };
+
+    // Reconstroi com espaços corretos
+    e.target.value = principal.map(formatarParte).join(', ') + (cidadeUF ? ` — ${formatarParte(cidadeUF)}` : '');
+});
+// ✅ Formata CEP automaticamente se digitado
+document.getElementById('endereco_contratante').addEventListener('input', function(e) {
+    let valor = e.target.value;
+    // Procura números para CEP
+    const cepMatch = valor.match(/\D*(\d{5})\D*(\d{3})/);
+    if (cepMatch && !valor.includes('-')) {
+        valor = valor.replace(/(\d{5})(\d{3})/, '$1-$2');
+    }
+    // Adiciona "CEP " automaticamente se só tiver números
+    const cepSimples = valor.match(/(\d{5}-\d{3})/);
+    if (cepSimples && !/CEP/i.test(valor)) {
+        valor = valor.replace(cepSimples[1], `CEP ${cepSimples[1]}`);
+    }
+    e.target.value = valor;
+});
 // =========================================================
 // ✅ PROMOÇÃO — marca/desmarca itens juntos
 // =========================================================
